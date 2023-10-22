@@ -10,7 +10,8 @@ import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
 
 //redux store
-import { loginUser, apiError } from '../../redux/actions';
+import { apiError } from '../../redux/actions';
+import { loginUser } from '../../apis/api';
 
 //Import Images
 import logodark from "../../assets/images/logo-dark.png";

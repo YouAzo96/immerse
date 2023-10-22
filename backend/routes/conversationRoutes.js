@@ -5,7 +5,7 @@ const router = express.Router();
 const db = require('../server.js'); // Update the path as needed
 
 // Route for creating a new conversation
-router.post('/conversations', (req, res) => {
+router.post('/', (req, res) => {
   const { name } = req.body;
 
   // Insert a new conversation into the Conversation table
@@ -25,7 +25,7 @@ router.post('/conversations', (req, res) => {
 });
 
 // Route for fetching all conversations
-router.get('/conversations', (req, res) => {
+router.get('/', (req, res) => {
   // Query to retrieve all conversations
   const sql = 'SELECT * FROM Conversation';
   
@@ -43,7 +43,7 @@ router.get('/conversations', (req, res) => {
 });
 
 // Route for fetching a conversation by ID
-router.get('/conversations/:convId', (req, res) => {
+router.get('/:convId', (req, res) => {
   const convId = req.params.convId;
 
   // Query to retrieve a conversation by ID

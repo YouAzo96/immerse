@@ -1,50 +1,36 @@
 import React, { useEffect } from 'react';
 import Routes from './routes';
 
-//Import Scss
+// Import Scss
 import "./assets/scss/themes.scss";
 
-//fackbackend
-import fakeBackend from './helpers/fake-backend';
+// Import the Axios library for making API calls
+import axios from 'axios';
+
+// Selector and Redux setup
 import { useSelector } from 'react-redux';
 import { createSelector } from 'reselect';
 
-// //Firebase helper
-// import { initFirebaseBackend } from "./helpers/firebase";
+// Replace the fakeBackend import with actual API functions
+import { registerUser, loginUser } from './apis/api';
 
-// TODO
-fakeBackend();
-
-// const firebaseConfig = {
-// 	apiKey: process.env.REACT_APP_APIKEY,
-// 	authDomain: process.env.REACT_APP_AUTHDOMAIN,
-// 	databaseURL: process.env.REACT_APP_DATABASEURL,
-// 	projectId: process.env.REACT_APP_PROJECTID,
-// 	storageBucket: process.env.REACT_APP_STORAGEBUCKET,
-// 	messagingSenderId: process.env.REACT_APP_MESSAGINGSENDERID,
-// 	appId: process.env.REACT_APP_APPID,
-// 	measurementId: process.env.REACT_APP_MEASUREMENTID,
-// };
-  
-// // init firebase backend
-// initFirebaseBackend(firebaseConfig);
 
 function App() {
-
   const selectLayoutProperties = createSelector(
     (state) => state.Layout,
     (layout) => ({
       layoutMode: layout.layoutMode,
     })
   );
-  
+
   const { layoutMode } = useSelector(selectLayoutProperties);
 
-useEffect(() => {
-  layoutMode && localStorage.setItem("layoutMode",layoutMode);
-}, [layoutMode])
+  useEffect(() => {
+    layoutMode && localStorage.setItem("layoutMode", layoutMode);
+  }, [layoutMode]);
+
 
   return <Routes />;
-};
+}
 
 export default App;

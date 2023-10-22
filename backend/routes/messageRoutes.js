@@ -5,7 +5,7 @@ const router = express.Router();
 const db = require('../server.js'); // Update the path as needed
 
 // Route for fetching messages by conversation ID
-router.get('/messages/:convId', (req, res) => {
+router.get('/:convId', (req, res) => {
   const convId = req.params.convId;
 
   // Query to retrieve messages for a specific conversation
@@ -25,7 +25,7 @@ router.get('/messages/:convId', (req, res) => {
 });
 
 // Route for sending a new message
-router.post('/messages', (req, res) => {
+router.post('/', (req, res) => {
   const { content, content_type, status, conv_id, sender_id } = req.body;
 
   // Insert a new message into the Message table
@@ -46,7 +46,7 @@ router.post('/messages', (req, res) => {
 });
 
 // Route for updating a message's status
-router.put('/messages/:msgId', (req, res) => {
+router.put('/:msgId', (req, res) => {
   const msgId = req.params.msgId;
   const { status } = req.body;
 
@@ -68,7 +68,7 @@ router.put('/messages/:msgId', (req, res) => {
 });
 
 // Route for deleting a message
-router.delete('/messages/:msgId', (req, res) => {
+router.delete('/:msgId', (req, res) => {
   const msgId = req.params.msgId;
 
   // Delete a message from the Message table

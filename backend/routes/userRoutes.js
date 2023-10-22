@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql2/promise.js'); // Import the MySQL library or ORM you're using
+const mysql = require('mysql2'); // Import the MySQL library or ORM you're using
 const db = require('../server.js')
 
 
@@ -35,29 +35,10 @@ router.post('/login', (req, res) => {
   res.status(200).json({ token });
 });
 
-// Route for fetching user profile
-router.get('/:user_id', (req, res) => {
-  const { user_id } = req.params;
-
-  // Query the User table to fetch user profile information
-  const sql = 'SELECT user_id, email, fname, lname, last_seen, about, image FROM User WHERE user_id = ?';
-  db.query(sql, [user_id], (err, results) => {
-    if (err) {
-      console.error('Error fetching user profile:', err);
-      return res.status(500).json({ error: 'Error fetching user profile' });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    const userProfile = results[0];
-    return res.status(200).json(userProfile);
-  });
-});
-
 // GET all users
 router.get('/', async (req, res) => {
   try {
-    const users = await db.query('SELECT * FROM User');
+    const users = await db.promise().query('SELECT * FROM User');
     res.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -69,7 +50,7 @@ router.get('/', async (req, res) => {
 router.get('/:user_id', async (req, res) => {
   const { user_id } = req.params;
   try {
-    const user = await db.query('SELECT * FROM User WHERE user_id = ?', [user_id]);
+    const user = await db.promise().query('SELECT * FROM User WHERE user_id = ?', [user_id]);
     if (user.length === 0) {
       res.status(404).json({ error: 'User not found' });
     } else {
@@ -85,7 +66,7 @@ router.get('/:user_id', async (req, res) => {
 router.post('/', async (req, res) => {
   const { user_id, password, email, fname, lname } = req.body;
   try {
-    await db.query('INSERT INTO User (user_id, password, email, fname, lname) VALUES (?, ?, ?, ?, ?)', [user_id, password, email, fname, lname]);
+    await db.promise().query('INSERT INTO User (user_id, password, email, fname, lname) VALUES (?, ?, ?, ?, ?)', [user_id, password, email, fname, lname]);
     res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
     console.error('Error creating user:', error);
@@ -98,7 +79,7 @@ router.put('/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { email, fname, lname } = req.body;
   try {
-    await db.query('UPDATE User SET email = ?, fname = ?, lname = ? WHERE user_id = ?', [email, fname, lname, user_id]);
+    await db.promise().query('UPDATE User SET email = ?, fname = ?, lname = ? WHERE user_id = ?', [email, fname, lname, user_id]);
     res.json({ message: 'User updated successfully' });
   } catch (error) {
     console.error('Error updating user:', error);

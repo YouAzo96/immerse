@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql2/promise.js');
+const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
@@ -12,15 +12,19 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-// Create a MySQL pool connection
-const db = mysql.createPool({
-    host: 'localhost', // Change to database host
-    user: 'root',      // Change to database user
-    password: 'password',  // Change to database password
-    database: 'immerse',  // Change to database name
+// Create a MySQL connection
+const db = mysql.createConnection({
+    // host: 'sql9.freemysqlhosting.net', // Change to database host
+    // user: 'sql9652386',      // Change to database user
+    // password: 'NqHfNyamBY',  // Change to database password
+    // database: 'sql9652386',  // Change to database name
+    host: 'localhost', 
+    user: 'root', 
+    password: 'password',
+    database: 'immerse',
   });
   
-  module.exports = db; // Export the db connection pool
+  module.exports = db; // Export the db connection
 
 
 // app.use('/api/users', authenticateToken, (req, res) => {
@@ -48,24 +52,34 @@ const userHasContactRoutes = require('./routes/userHasContactRoutes');
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
-app.use('/api/user-has-contact', userHasContactRoutes);
-app.use('/api/conversation-participant', conversationHasParticipantRoutes);
+app.use('/api/user/contact', userHasContactRoutes);
+app.use('/api/conversation/participant', conversationHasParticipantRoutes);
 
 
 
 
-// Create a route for testing the database connection
-app.get('/test-db', async (req, res) => {
-    try {
-      const [rows] = await db.execute('SELECT 1 + 1 AS result');
-      console.log('Database connection successful');
-      res.json({ result: rows[0].result });
-    } catch (error) {
-      console.error('Database connection error:', error);
-      res.status(500).json({ error: 'Database connection error' });
-    }
-  });
+// Connect to the MySQL server
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL database');
   
+  // You can now perform MySQL queries using the 'db' object
+
+  // For example, to execute a simple query:
+  db.query('SELECT 1 + 1 AS result', (error, results) => {
+    if (error) {
+      console.error('Error executing query:', error);
+      return;
+    }
+    console.log('Query result:', results);
+  });
+
+  // Don't forget to close the db when you're done
+  // db.end();
+});
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
