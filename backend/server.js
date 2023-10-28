@@ -4,7 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
-const authenticateToken = require('./auth/authMiddleware.js');
+// const authenticateToken = require('./auth/authMiddleware.js');
 const errorHandler = require('./errorHandler.js');
 
 // Middleware
@@ -38,7 +38,7 @@ const db = mysql.createConnection({
 //     res.json({ message: 'This is a protected route' });
 //   });
 
-// app.use(errorHandler);
+app.use(errorHandler);
 
 
 // Routes

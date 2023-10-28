@@ -23,16 +23,35 @@ router.post('/register', (req, res) => {
 });
 
 // Route for user login
-router.post('/login', (req, res) => {
-  const { user_id, password } = req.body;
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
-  // Check if the user credentials are valid (we'll need to implement this logic)
-  // For example, query the User table to verify the user's existence and password
+  // Check if the user credentials are valid by verifying the user's existence and password
+  // You need to implement a database query to check if the user_id exists and the password matches
+  let responseSent = false; //Flag to track whether a response has been sent
+  try {
+    const user = await db.promise().query('SELECT * FROM User WHERE email = ?', [email]);
+    if (user.length === 0) {
+      responseSent = true;
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      responseSent = true;
+      if (user && user[0][0].password === password) {
+        // User exists, and the password is correct
+        res.status(200).json({ user: user });
+      } else {
+        // User doesn't exist or password is incorrect
+        res.status(401).json({ error: 'Invalid username or password' });
+      }
+      user = user[0];
+    }
+  } catch (error) {
+    if (!responseSent) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 
-  // Assuming you've verified the user, generate a JWT token and send it in the response
-  const token = generateJWT(user_id); // Implement this function to generate JWT
-
-  res.status(200).json({ token });
 });
 
 // GET all users
@@ -48,18 +67,9 @@ router.get('/', async (req, res) => {
 
 // GET a user by user_id
 router.get('/:user_id', async (req, res) => {
-  const { user_id } = req.params;
-  try {
-    const user = await db.promise().query('SELECT * FROM User WHERE user_id = ?', [user_id]);
-    if (user.length === 0) {
-      res.status(404).json({ error: 'User not found' });
-    } else {
-      res.json(user[0]);
-    }
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  const { email } = req.params;
+  console.log("user_id req: ", req.params);
+  findUserInDatabase(email, res)
 });
 
 // POST a new user
@@ -89,5 +99,24 @@ router.put('/:user_id', async (req, res) => {
 
 
 // Add more user-related routes as needed
+
+async function findUserInDatabase(email, res){
+  let responseSent = false; //Flag to track whether a response has been sent
+  try {
+    const user = await db.promise().query('SELECT * FROM User WHERE email = ?', [email]);
+    if (user.length === 0) {
+      responseSent = true;
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      responseSent = true;
+      res.json(user[0]);
+    }
+  } catch (error) {
+    if (!responseSent) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+}
 
 module.exports = router;
