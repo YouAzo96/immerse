@@ -1,6 +1,5 @@
 const config = {
-    API_URL: "http://localhost:8000/",
-    AUTH_BACKEND: 'Dummy'
-}
+  API_URL: 'http://localhost:3001/api',
+};
 
-export default config
+export default config;

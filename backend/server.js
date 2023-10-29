@@ -2,44 +2,34 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const app = express();
-const port = process.env.PORT || 3000;
-const authenticateToken = require('./auth/authMiddleware.js');
 const errorHandler = require('./errorHandler.js');
+
+const app = express();
+const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-
 // Create a MySQL connection
 const db = mysql.createConnection({
-    // host: 'sql9.freemysqlhosting.net', // Change to database host
-    // user: 'sql9652386',      // Change to database user
-    // password: 'NqHfNyamBY',  // Change to database password
-    // database: 'sql9652386',  // Change to database name
-    host: 'localhost', 
-    user: 'root', 
-    password: 'password',
-    database: 'immerse',
-  });
-  
-  module.exports = db; // Export the db connection
+  // host: 'sql9.freemysqlhosting.net', // Change to database host
+  // user: 'sql9652386',      // Change to database user
+  // password: 'NqHfNyamBY',  // Change to database password
+  // database: 'sql9652386',  // Change to database name
+  host: 'localhost',
+  user: 'root',
+  password: 'password',
+  database: 'immerse',
+});
+// Microservices URLs
+const userServiceUrl = 'http://localhost:3001';
+const authServiceUrl = 'http://localhost:3002';
+const conversationServiceUrl = 'http://localhost:3003';
+const notificationServiceUrl = 'http://localhost:3004';
 
-
-// app.use('/api/users', authenticateToken, (req, res) => {
-//      // Check if the user has specific permissions
-//     if (!userHasPermission(req.user)) {
-//         const error = new Error('Permission Denied');
-//         error.status = 403; // Forbidden
-//         return next(error); // Pass the error to the error handling middleware
-//     }
-//     // Only accessible if the user is authenticated
-//     res.json({ message: 'This is a protected route' });
-//   });
-
+module.exports = { db, authServiceUrl };
 // app.use(errorHandler);
-
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
@@ -55,9 +45,6 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/user/contact', userHasContactRoutes);
 app.use('/api/conversation/participant', conversationHasParticipantRoutes);
 
-
-
-
 // Connect to the MySQL server
 db.connect((err) => {
   if (err) {
@@ -65,21 +52,8 @@ db.connect((err) => {
     return;
   }
   console.log('Connected to MySQL database');
-  
-  // You can now perform MySQL queries using the 'db' object
-
-  // For example, to execute a simple query:
-  db.query('SELECT 1 + 1 AS result', (error, results) => {
-    if (error) {
-      console.error('Error executing query:', error);
-      return;
-    }
-    console.log('Query result:', results);
-  });
-
-  // Don't forget to close the db when you're done
   // db.end();
 });
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

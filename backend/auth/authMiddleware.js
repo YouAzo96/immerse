@@ -1,25 +1,42 @@
 const jwt = require('jsonwebtoken');
+const request = require('request-promise');
+const server = require('../server');
+const authServiceUrl = server.authServiceUrl;
 
-function authenticateToken(req, res, next) {
-  // Extract the token from the request headers or cookies
-  const token = req.headers['authorization'] || req.cookies['access_token'];
+//verification of tokens
+async function authenticateToken(req, res) {
+  const token =
+    req.headers['authorization'] ||
+    (req.cookies && req.cookies['access_token']);
 
   if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    //login credentials with no token
+    //forward to auth microservice.
+    const requestOptions = {
+      method: 'POST',
+      uri: `${authServiceUrl}/auth`,
+      body: req.body,
+      json: true,
+    };
+
+    await request(requestOptions)
+      .then((response) => {
+        if (response.token) {
+          return res.status(200).json({ token: response.token, status: 200 }); //send token back to front end.
+        }
+      })
+      .catch((error) => {
+        return res.status(error.statusCode).json(error.error);
+      });
   }
 
-  // Verify the token
-  jwt.verify(token, 'your-secret-key', (err, user) => {
+  //Token received, we must verify it
+  jwt.verify(token, 'MyToKeN', (err, user) => {
     if (err) {
-      return res.status(403).json({ error: 'Forbidden' });
+      //If token exists but invalid, return error and redirect to login page
+      return res.status(403).end('Forbidden | Invalid Token!');
     }
-
-    // Attach the user object to the request for later use
-    req.user = user;
-
-    // Continue to the next middleware or route handler
-    next();
+    return res.status(200).end('Valid Token'); // redirect to dashboard on front end
   });
 }
-
 module.exports = authenticateToken;

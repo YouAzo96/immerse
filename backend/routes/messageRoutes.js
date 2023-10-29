@@ -1,16 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-// Import the database connection (assuming it's named 'db' in server.js)
-const db = require('../server.js'); // Update the path as needed
-
 // Route for fetching messages by conversation ID
 router.get('/:convId', (req, res) => {
   const convId = req.params.convId;
 
   // Query to retrieve messages for a specific conversation
   const sql = 'SELECT * FROM Message WHERE conv_id = ?';
-  
+
   // Use the database connection to execute the query
   db.query(sql, [convId], (err, results) => {
     if (err) {
@@ -29,7 +26,8 @@ router.post('/', (req, res) => {
   const { content, content_type, status, conv_id, sender_id } = req.body;
 
   // Insert a new message into the Message table
-  const sql = 'INSERT INTO Message (content, content_type, status, conv_id, sender_id) VALUES (?, ?, ?, ?, ?)';
+  const sql =
+    'INSERT INTO Message (content, content_type, status, conv_id, sender_id) VALUES (?, ?, ?, ?, ?)';
   const values = [content, content_type, status, conv_id, sender_id];
 
   // Use the database connection to execute the query
@@ -73,7 +71,7 @@ router.delete('/:msgId', (req, res) => {
 
   // Delete a message from the Message table
   const sql = 'DELETE FROM Message WHERE msg_id = ?';
-  
+
   // Use the database connection to execute the query
   db.query(sql, [msgId], (err, results) => {
     if (err) {

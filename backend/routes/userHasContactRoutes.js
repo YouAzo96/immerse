@@ -1,16 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-// Import the database connection
-const db = require('../server.js'); // Update the path as needed
-
 // Route for adding a new contact for a user
 router.post('/user/contact', (req, res) => {
   const { userId, contactId } = req.body;
 
   // Insert a new user contact into the UserHasContact table
   const sql = 'INSERT INTO UserHasContact (user_id, contact_id) VALUES (?, ?)';
-  
+
   // Use the database connection to execute the query
   db.query(sql, [userId, contactId], (err, results) => {
     if (err) {
@@ -30,7 +27,7 @@ router.get('/user/contacts/:userId', (req, res) => {
 
   // Query to retrieve all contacts for a user
   const sql = 'SELECT * FROM UserHasContact WHERE user_id = ?';
-  
+
   // Use the database connection to execute the query
   db.query(sql, [userId], (err, results) => {
     if (err) {
@@ -51,7 +48,7 @@ router.delete('/user/contact/:userId/:contactId', (req, res) => {
 
   // Delete the user contact from the UserHasContact table
   const sql = 'DELETE FROM UserHasContact WHERE user_id = ? AND contact_id = ?';
-  
+
   // Use the database connection to execute the query
   db.query(sql, [userId, contactId], (err, results) => {
     if (err) {
@@ -66,5 +63,4 @@ router.delete('/user/contact/:userId/:contactId', (req, res) => {
 });
 
 // Other user contact-related routes can be added here
-
 module.exports = router;

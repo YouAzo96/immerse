@@ -1,16 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-// Import the database connection
-const db = require('../server.js'); // Update the path as needed
-
 // Route for creating a new conversation
 router.post('/', (req, res) => {
   const { name } = req.body;
 
   // Insert a new conversation into the Conversation table
   const sql = 'INSERT INTO Conversation (name) VALUES (?)';
-  
+
   // Use the database connection to execute the query
   db.query(sql, [name], (err, results) => {
     if (err) {
@@ -28,7 +25,7 @@ router.post('/', (req, res) => {
 router.get('/', (req, res) => {
   // Query to retrieve all conversations
   const sql = 'SELECT * FROM Conversation';
-  
+
   // Use the database connection to execute the query
   db.query(sql, (err, results) => {
     if (err) {
