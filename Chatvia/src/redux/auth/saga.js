@@ -1,6 +1,6 @@
 import { all, call, fork, put, takeEvery } from 'redux-saga/effects';
 
-import { APIClient } from '../../helpers/apiClient';
+import { APIClient } from '../../apis/apiClient';
 import { getFirebaseBackend } from '../../helpers/firebase';
 
 import {
