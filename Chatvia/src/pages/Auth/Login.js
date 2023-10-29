@@ -57,6 +57,13 @@ const Login = (props) => {
       email: Yup.string().required('Please Enter Your Username'),
       password: Yup.string().required('Please Enter Your Password'),
     }),
+    //Youssef: I need to check this,
+    //try {
+    // Dispatch the action created by loginUser action creator
+    //  dispatch(loginUser(values.email,values.password)); // Ensure you have access to `dispatch` function from Redux
+    //} catch (error) {
+    // Handle errors, e.g., display an error message
+    //}
     onSubmit: (values) => {
       props.loginUser(values.email, values.password, props.router.navigate);
     },

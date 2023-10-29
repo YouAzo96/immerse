@@ -1,7 +1,7 @@
 import {
     CHAT_USER, ACTIVE_USER,FULL_USER, ADD_LOGGED_USER, CREATE_GROUP
 } from './constants';
-
+// Needs major change
 
 //Import Images
 import avatar2 from "../../assets/images/users/avatar-2.jpg";

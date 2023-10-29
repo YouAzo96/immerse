@@ -3,7 +3,6 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const errorHandler = require('./errorHandler.js');
-
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -29,7 +28,7 @@ const conversationServiceUrl = 'http://localhost:3003';
 const notificationServiceUrl = 'http://localhost:3004';
 
 module.exports = { db, authServiceUrl };
-// app.use(errorHandler);
+app.use(errorHandler);
 
 // Routes
 const userRoutes = require('./routes/userRoutes');

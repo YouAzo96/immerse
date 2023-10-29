@@ -6,7 +6,7 @@ import {
 	SET_CONVERSATION_NAME_IN_OPEN_CHAT,
 	SET_LAYOUT_MODE
 } from "./constants";
-
+// Hard coded lines here, should change
 const INIT_STATE = {
 	activeTab : "chat",
 	userSidebar : false,
