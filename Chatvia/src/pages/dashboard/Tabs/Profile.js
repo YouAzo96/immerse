@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dropdown,
   DropdownMenu,
@@ -18,6 +18,10 @@ import avatar1 from "../../../assets/images/users/avatar-1.jpg";
 import { useTranslation } from "react-i18next";
 
 function Profile(props) {
+  const [user, setUser] = useState(null);
+
+  
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isOpen1, setIsOpen1] = useState(true);
   const [isOpen2, setIsOpen2] = useState(false);
@@ -42,6 +46,27 @@ function Profile(props) {
   };
 
   const toggle = () => setDropdownOpen(!dropdownOpen);
+
+  useEffect(() => {
+    async function getUser() {
+      const token = localStorage.getItem('authUser');
+      console.log(token);
+      const response = await fetch('/api/users/me', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      console.log(response);
+      const user = await response.json();
+      setUser(user);
+    }
+    getUser();
+  }, []);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <React.Fragment>
@@ -76,7 +101,7 @@ function Profile(props) {
           </div>
 
           <h5 className="font-size-16 mb-1 text-truncate">
-            {t("Patricia Smith")}
+            {t(user.name)}
           </h5>
           <p className="text-muted text-truncate mb-1">
             <i className="ri-record-circle-fill font-size-10 text-success me-1 d-inline-block"></i>{" "}

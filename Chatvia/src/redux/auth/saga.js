@@ -1,8 +1,6 @@
 import { all, call, fork, put, takeEvery } from 'redux-saga/effects';
 
 import { APIClient } from '../../apis/apiClient';
-import { getFirebaseBackend } from '../../helpers/firebase';
-
 import {
   LOGIN_USER,
   LOGOUT_USER,
@@ -18,9 +16,6 @@ import {
   logoutUserSuccess,
 } from './actions';
 
-//Initilize firebase
-const fireBaseBackend = getFirebaseBackend();
-
 /**
  * Sets the session
  * @param {*} user
@@ -34,14 +29,6 @@ const create = new APIClient().create;
  */
 function* login({ payload: { username, password, history } }) {
   try {
-    if (process.env.REACT_APP_DEFAULTAUTH === 'firebase') {
-      const response = yield call(
-        fireBaseBackend.loginUser,
-        username,
-        password
-      );
-      yield put(loginUserSuccess(response));
-    } else {
       const response = yield call(create, '/users/login', {
         username,
         password,
@@ -52,11 +39,18 @@ function* login({ payload: { username, password, history } }) {
       } else {
         console.log(response.message); //find the element that hold error messages and write to it a significant msg.
       }
-    }
     history('/dashboard');
-  } catch (error) {
-    //TODO: Get the error message to plug it in the error element.
-    yield put(apiError(error));
+  }  catch (error) {
+    let errorMessage;
+    console.log(error);
+    if (error.includes('403')) {
+      errorMessage = 'User not found';
+    }else if (error.includes('404')) {
+      errorMessage = 'Password is incorrect';
+    } else {
+      errorMessage = 'Something went wrong! Please try again later';
+    }
+    yield put(apiError(errorMessage));
   }
 }
 
@@ -67,9 +61,6 @@ function* login({ payload: { username, password, history } }) {
 function* logout({ payload: { history } }) {
   try {
     localStorage.removeItem('authUser');
-    if (process.env.REACT_APP_DEFAULTAUTH === 'firebase') {
-      yield call(fireBaseBackend.logout);
-    }
     yield put(logoutUserSuccess(true));
   } catch (error) {}
 }
@@ -81,17 +72,8 @@ function* register({ payload: { user } }) {
   try {
     const email = user.email;
     const password = user.password;
-    if (process.env.REACT_APP_DEFAULTAUTH === 'firebase') {
-      const response = yield call(
-        fireBaseBackend.registerUser,
-        email,
-        password
-      );
-      yield put(registerUserSuccess(response));
-    } else {
-      const response = yield call(create, '/users/register', user);
-      yield put(registerUserSuccess(response));
-    }
+    const response = yield call(create, '/users/register', user);
+    yield put(registerUserSuccess(response));
   } catch (error) {
     yield put(apiError(error));
   }
@@ -102,19 +84,8 @@ function* register({ payload: { user } }) {
  */
 function* forgetPassword({ payload: { email } }) {
   try {
-    if (process.env.REACT_APP_DEFAULTAUTH === 'firebase') {
-      const response = yield call(fireBaseBackend.forgetPassword, email);
-      if (response) {
-        yield put(
-          forgetPasswordSuccess(
-            'Reset link are sended to your mailbox, check there first'
-          )
-        );
-      }
-    } else {
-      const response = yield call(create, '/forget-pwd', { email });
-      yield put(forgetPasswordSuccess(response));
-    }
+    const response = yield call(create, '/forget-pwd', { email });
+    yield put(forgetPasswordSuccess(response));
   } catch (error) {
     yield put(apiError(error));
   }

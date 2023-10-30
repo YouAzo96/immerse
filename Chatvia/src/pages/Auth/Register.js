@@ -35,12 +35,14 @@ const Register = (props) => {
         enableReinitialize: true,
 
         initialValues: {
-            username: '',
+            fname: '',
+            lname: '',
             email: '',
             password: ''
         },
         validationSchema: Yup.object({
-            username: Yup.string().required('Required'),
+            fname: Yup.string().required('Required'),
+            lname: Yup.string().required('Required'),
             email: Yup.string().email('Enter proper email').required('Required'),
             password: Yup.string()
                 .required('Required')
@@ -79,7 +81,7 @@ const Register = (props) => {
         dispatch(apiError(""));
     }, [dispatch]);
 
-    document.title = "Register | Chatvia React - Responsive Bootstrap 5 Chat App"
+    document.title = "Register | Immerse: Real-Time Chat App";
 
 
     return (
@@ -96,7 +98,7 @@ const Register = (props) => {
                                 </Link>
 
                                 <h4>{t('Register')}</h4>
-                                <p className="text-muted mb-4">{t('Get your Chatvia account now')}.</p>
+                                <p className="text-muted mb-4">{t('Get your Immerse account now')}.</p>
 
                             </div>
 
@@ -144,24 +146,47 @@ const Register = (props) => {
                                         </div>
 
                                         <div className="mb-3">
-                                            <Label className="form-label">{t('Username')}</Label>
+                                            <Label className="form-label">{t('First Name')}</Label>
                                             <InputGroup className="mb-3 bg-soft-light input-group-lg rounded-lg">
                                                 <span className="input-group-text border-light text-muted">
                                                     <i className="ri-user-2-line"></i>
                                                 </span>
                                                 <Input
                                                     type="text"
-                                                    id="username"
-                                                    name="username"
+                                                    id="fname"
+                                                    name="fname"
                                                     className="form-control form-control-lg bg-soft-light border-light"
-                                                    placeholder="Enter Username"
+                                                    placeholder="Enter fname"
                                                     onChange={formik.handleChange}
                                                     onBlur={formik.handleBlur}
-                                                    value={formik.values.username}
-                                                    invalid={formik.touched.username && formik.errors.username ? true : false}
+                                                    value={formik.values.fname}
+                                                    invalid={formik.touched.fname && formik.errors.fname ? true : false}
                                                 />
-                                                {formik.touched.username && formik.errors.username ? (
-                                                    <FormFeedback type="invalid">{formik.errors.username}</FormFeedback>
+                                                {formik.touched.fname && formik.errors.fname ? (
+                                                    <FormFeedback type="invalid">{formik.errors.fname}</FormFeedback>
+                                                ) : null}
+                                            </InputGroup>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <Label className="form-label">{t('Last Name')}</Label>
+                                            <InputGroup className="mb-3 bg-soft-light input-group-lg rounded-lg">
+                                                <span className="input-group-text border-light text-muted">
+                                                    <i className="ri-user-2-line"></i>
+                                                </span>
+                                                <Input
+                                                    type="text"
+                                                    id="lname"
+                                                    name="lname"
+                                                    className="form-control form-control-lg bg-soft-light border-light"
+                                                    placeholder="Enter lname"
+                                                    onChange={formik.handleChange}
+                                                    onBlur={formik.handleBlur}
+                                                    value={formik.values.lname}
+                                                    invalid={formik.touched.lname && formik.errors.lname ? true : false}
+                                                />
+                                                {formik.touched.lname && formik.errors.lname ? (
+                                                    <FormFeedback type="invalid">{formik.errors.lname}</FormFeedback>
                                                 ) : null}
                                             </InputGroup>
                                         </div>
@@ -197,7 +222,7 @@ const Register = (props) => {
                                         </div>
 
                                         <div className="mt-4 text-center">
-                                            <p className="text-muted mb-0">{t('By registering you agree to the Chatvia')} <Link to="#" className="text-primary">{t('Terms of Use')}</Link></p>
+                                            <p className="text-muted mb-0">{t('By registering you agree to the Immerse')} <Link to="#" className="text-primary">{t('Terms of Use')}</Link></p>
                                         </div>
 
                                     </Form>
@@ -206,7 +231,7 @@ const Register = (props) => {
 
                             <div className="mt-5 text-center">
                                 <p>{t('Already have an account')} ? <Link to="login" className="font-weight-medium text-primary"> {t('Signin')} </Link> </p>
-                                <p>© {new Date().getFullYear()} {t('Chatvia')}. {t('Crafted with')} <i className="mdi mdi-heart text-danger"></i> {t('by Themesbrand')}</p>
+                                <p>© {new Date().getFullYear()} {t('Immerse')}. {t('Crafted with')} <i className="mdi mdi-heart text-danger"></i> {t('by Themesbrand')}</p>
                             </div>
                         </Col>
                     </Row>

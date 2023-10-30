@@ -49,6 +49,18 @@ router.get('/:user_id', async (req, res) => {
   }
 });
 
+// Fetch Logged in User
+router.get('/me', authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  console.log('userId', userId);
+  const user = await getUserById(userId);
+  console.log('user', user);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  res.json(user);
+});
+
 // PUT (update) a user's information
 router.put('/:user_id', async (req, res) => {
   const { user_id } = req.params;
@@ -66,5 +78,21 @@ router.put('/:user_id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+async function getUserById(userId) {
+  try {
+    const user = await db
+      .promise()
+      .query('SELECT * FROM User WHERE user_id = ?', [userId]);
+    if (user.length === 0) {
+      return null;
+    } else {
+      return user[0];
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw error;
+  }
+}
 
 module.exports = router;

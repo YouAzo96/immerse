@@ -73,7 +73,7 @@ const Login = (props) => {
     return <Navigate to="/" />;
   }
 
-  document.title = 'Login | Chatvia React - Responsive Bootstrap 5 Chat App';
+  document.title = 'Login | Immerse: Real-Time Chat App';
 
   return (
     <React.Fragment>
@@ -99,10 +99,9 @@ const Login = (props) => {
 
                 <h4>{t('Sign in')}</h4>
                 <p className="text-muted mb-4">
-                  {t('Sign in to continue to Chatvia')}.
+                  {t('Sign in to continue to Immerse')}.
                 </p>
               </div>
-
               <Card>
                 <CardBody className="p-4">
                   {props.error && <Alert color="danger">{props.error}</Alert>}
@@ -218,7 +217,7 @@ const Login = (props) => {
                   </Link>{' '}
                 </p>
                 <p>
-                  © {new Date().getFullYear()} {t('Chatvia')}.{' '}
+                  © {new Date().getFullYear()} {t('Immerse')}.{' '}
                   {t('Crafted with')}{' '}
                   <i className="mdi mdi-heart text-danger"></i>{' '}
                   {t('by Themesbrand')}
