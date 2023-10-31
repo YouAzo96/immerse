@@ -8,7 +8,7 @@ async function authenticateToken(req, res) {
   const token =
     req.headers['authorization'] ||
     (req.cookies && req.cookies['access_token']);
-
+  let flag = false;
   if (!token) {
     //login credentials with no token
     //forward to auth microservice.
@@ -22,21 +22,24 @@ async function authenticateToken(req, res) {
     await request(requestOptions)
       .then((response) => {
         if (response.token) {
+          flag = true;
           return res.status(200).json({ token: response.token, status: 200 }); //send token back to front end.
         }
       })
       .catch((error) => {
-        return res.status(error.statusCode).json(error.error);
+        flag = true;
+        return res.status(400).json(error.error);
       });
   }
-
-  //Token received, we must verify it
-  jwt.verify(token, 'MyToKeN', (err, user) => {
-    if (err) {
-      //If token exists but invalid, return error and redirect to login page
-      return res.status(403).end('Forbidden | Invalid Token!');
-    }
-    return res.status(200).end('Valid Token'); // redirect to dashboard on front end
-  });
+  if (!flag) {
+    //Token received, we must verify it
+    jwt.verify(token, 'MyToKeN', (err, user) => {
+      if (err) {
+        //If token exists but invalid, return error and redirect to login page
+        return res.status(403).json({ error: 'Forbidden | Invalid Token!' });
+      }
+      return res.status(200).json({ message: 'Valid Token' }); // redirect to dashboard on front end
+    });
+  }
 }
 module.exports = authenticateToken;

@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require('../auth/authMiddleware.js');
 const bc = require('bcrypt');
 const { db } = require('../server.js');
+const request = require('request-promise');
 
 // Route for user registration
 router.post('/register', async (req, res) => {
@@ -13,6 +14,11 @@ router.post('/register', async (req, res) => {
     'INSERT INTO User (password, email, fname, lname) VALUES (?, ?, ?, ?)';
 
   try {
+    const sql1 = 'SELECT email FROM user WHERE email = ?;';
+    const [results, fields] = await db.promise().query(sql1, [email]);
+    if (results.length !== 0) {
+      return res.status(405).json({ error: 'User Exists' }); //'User exists!
+    }
     // Generate a salt and hash the password
     const salt = await bc.genSalt();
     const password = await bc.hash(req.body.password, salt);
@@ -22,7 +28,27 @@ router.post('/register', async (req, res) => {
     //send to DB
     await db.promise().query(sql, values);
 
-    return res.status(201).json({ message: 'User registered successfully' });
+    req.body = { username: req.body.email, password: req.body.password };
+    authMiddleware(req, res);
+    /*
+    //authenticate user:
+    const requestOptions = {
+      method: 'POST',
+      uri: `/login`,
+      body: { username: email, password: password },
+      json: true,
+    };
+
+    await request(requestOptions)
+      .then((response) => {
+        if (response.token) {
+          return res.status(200).json({ token: response.token, status: 200 }); //send token back to front end.
+        }
+      })
+      .catch((error) => {
+        return res.status(400).json(error.error);
+      });
+      */
   } catch (err) {
     return res.status(500).json({ error: 'User registration failed: ' + err });
   }
@@ -52,9 +78,7 @@ router.get('/:user_id', async (req, res) => {
 // Fetch Logged in User
 router.get('/me', authMiddleware, async (req, res) => {
   const userId = req.user.id;
-  console.log('userId', userId);
   const user = await getUserById(userId);
-  console.log('user', user);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -74,7 +98,6 @@ router.put('/:user_id', async (req, res) => {
       );
     res.json({ message: 'User updated successfully' });
   } catch (error) {
-    console.error('Error updating user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

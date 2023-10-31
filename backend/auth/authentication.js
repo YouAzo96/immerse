@@ -34,15 +34,14 @@ app.post('/auth', async (req, res) => {
     const [results, fields] = await db.promise().query(sql, [username]);
 
     if (results.length === 0) {
-      return res.status(403).end('User Not Found'); //'User not found!
+      return res.status(403).json({ error: 'User Not Found!' }); //'User not found!
     }
     user = results[0];
     if (!(await bc.compare(password, user.password))) {
-      return res.status(404).end('Credentials Missmatch'); //Credentials Missmatch!
+      return res.status(404).json({ error: 'Credentials Missmatch' }); //Credentials Missmatch!
     }
   } catch (err) {
-    console.error('Error executing the query:', err);
-    return res.status(500).end(err); //'MYSQL Server Error'
+    return res.status(500).json({ error: err.message }); //'MYSQL Server Error'
   }
   // Generate a JWT token based on the user email and user_id
   const token = jwt.sign(

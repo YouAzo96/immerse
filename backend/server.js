@@ -22,7 +22,7 @@ const db = mysql.createConnection({
   database: 'immerse',
 });
 // Microservices URLs
-const userServiceUrl = 'http://localhost:3001';
+
 const authServiceUrl = 'http://localhost:3002';
 const conversationServiceUrl = 'http://localhost:3003';
 const notificationServiceUrl = 'http://localhost:3004';
