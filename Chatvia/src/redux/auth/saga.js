@@ -15,6 +15,7 @@ import {
   apiError,
   logoutUserSuccess,
 } from './actions';
+import { setLoggedInUser } from '../../helpers/authUtils';
 
 /**
  * Sets the session
@@ -29,28 +30,19 @@ const create = new APIClient().create;
  */
 function* login({ payload: { username, password, history } }) {
   try {
-      const response = yield call(create, '/users/login', {
-        username,
-        password,
-      });
-      if (response.status === 200) {
-        localStorage.setItem('authUser', JSON.stringify(response.token));
-        yield put(loginUserSuccess(response.token));
-      } else {
-        console.log(response.message); //find the element that hold error messages and write to it a significant msg.
-      }
-    history('/dashboard');
-  }  catch (error) {
-    let errorMessage;
-    console.log(error);
-    if (error.includes('403')) {
-      errorMessage = 'User not found';
-    }else if (error.includes('404')) {
-      errorMessage = 'Password is incorrect';
+    const response = yield call(create, '/users/login', {
+      username,
+      password,
+    });
+    if (response.status === 200) {
+      setLoggedInUser(response.token);
+      yield put(loginUserSuccess(response.token));
     } else {
-      errorMessage = 'Something went wrong! Please try again later';
+      console.log(response.message); //find the element that hold error messages and write to it a significant msg.
     }
-    yield put(apiError(errorMessage));
+    history('/dashboard');
+  } catch (error) {
+    yield put(apiError(error));
   }
 }
 
@@ -70,10 +62,8 @@ function* logout({ payload: { history } }) {
  */
 function* register({ payload: { user } }) {
   try {
-    const email = user.email;
-    const password = user.password;
     const response = yield call(create, '/users/register', user);
-    yield put(registerUserSuccess(response));
+    yield put(registerUserSuccess(response.token));
   } catch (error) {
     yield put(apiError(error));
   }

@@ -1,17 +1,12 @@
 {
-    "name": "immerse",
-    "private": true,
-    "workspaces": [
-      "Chatvia",
-      "backend"
-    ],
-    "scripts": {
-      "start": "npm-run-all --parallel start:*",
-      "start:Chatvia": "cd ~/Chatvia && npm start",
-      "start:backend": "cd ~/backend && npm start",
-      "test": "jest"
-    },
-    "dependencies": {
-    }
+  "name": "immerse",
+  "private": true,
+  "scripts": {
+    "start": "npm-run-all --parallel start:Chatvia start:backend",
+    "start:frontend": "cd Chatvia && npm start",
+    "start:backend": "cd backend && npm start"
+  },
+  "dependencies": {
+    "shared-library": "^1.0.0"
   }
-  
+}
