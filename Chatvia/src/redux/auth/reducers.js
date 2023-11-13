@@ -7,12 +7,15 @@ import {
   FORGET_PASSWORD,
   FORGET_PASSWORD_SUCCESS,
   API_FAILED,
+  FETCH_USER_PROFILE,
+  FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
 } from './constants';
 
 import { getLoggedInUser } from '../../helpers/authUtils';
 import { init } from 'i18next';
+import blankuser from '../../assets/images/users/blankuser.jpeg'
 
 const INIT_STATE = {
   user: getLoggedInUser(),
@@ -65,9 +68,18 @@ const Auth = (state = INIT_STATE, action) => {
         isUserLogout: false,
       };
 
-    default:
-      return { ...state };
-  }
-};
+    case FETCH_USER_PROFILE_SUCCESS:
+        return { ...state,
+           user: {
+            about: action.payload.about,
+            imageUrl: action.payload.imageUrl,
+            },
+             loading: false, 
+             error: null
+        };
+
+    default: return { ...state };
+    }
+}
 
 export default Auth;

@@ -11,7 +11,7 @@ const INIT_STATE = {
 	activeTab : "chat",
 	userSidebar : false,
 	conversationName : "Doris Brown",
-	layoutMode : "light"
+	layoutMode : localStorage.getItem("layout_mode") || "light"
 };
 
 const Layout = (state = INIT_STATE, action) => {

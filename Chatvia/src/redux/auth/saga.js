@@ -1,5 +1,4 @@
 import { all, call, fork, put, takeEvery } from 'redux-saga/effects';
-
 import { APIClient } from '../../apis/apiClient';
 import {
   LOGIN_USER,
@@ -7,8 +6,9 @@ import {
   REGISTER_USER,
   FORGET_PASSWORD,
   CODE_SENT,
+  FETCH_USER_PROFILE,
 } from './constants';
-
+import defaultImage from '../../assets/images/users/blankuser.jpeg';
 import {
   loginUserSuccess,
   registerUserSuccess,
@@ -16,6 +16,7 @@ import {
   apiError,
   logoutUserSuccess,
   codeSentSuccess,
+  setUserProfile,
 } from './actions';
 import { setLoggedInUser } from '../../helpers/authUtils';
 
@@ -25,6 +26,7 @@ import { setLoggedInUser } from '../../helpers/authUtils';
  */
 
 const create = new APIClient().create;
+const get = new APIClient().get;
 
 /**
  * Login the user
@@ -96,6 +98,29 @@ function* codeSent({ payload: { email } }) {
   }
 }
 
+// fetch the user data for profile
+function* fetchUserProfile() {
+  try {
+    const token = localStorage.getItem('authUser').replace(/"/g, '');
+    const response = yield call(get, '/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // console.log("saga API response is:", response)
+
+    const user = {
+      ...response,
+      imageUrl: response.imageUrl ? response.imageUrl : defaultImage,
+    }
+    yield put(setUserProfile(user));
+  } catch (error) {
+    console.log("saga API error is:", error)
+    yield put(apiError(error));
+  }
+}
+
 export function* watchLoginUser() {
   yield takeEvery(LOGIN_USER, login);
 }
@@ -114,6 +139,10 @@ export function* watchForgetPassword() {
   yield takeEvery(FORGET_PASSWORD, forgetPassword);
 }
 
+export function* watchFetchUserProfile() {
+  yield takeEvery(FETCH_USER_PROFILE, fetchUserProfile);
+}
+
 function* authSaga() {
   yield all([
     fork(watchCodeSent),
@@ -121,6 +150,7 @@ function* authSaga() {
     fork(watchLogoutUser),
     fork(watchRegisterUser),
     fork(watchForgetPassword),
+    fork(watchFetchUserProfile),
   ]);
 }
 

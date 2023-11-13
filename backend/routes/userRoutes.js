@@ -135,7 +135,26 @@ router.get('/me', async (req, res) => {
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     } else {
-      return res.status(200).json(user[0]);
+      try {
+        if (!user[0][0].image) {
+          return res.status(200).json({ about: user[0][0].about, imageUrl: null });
+        }
+        const imageBuffer = user[0][0].image;
+        console.log(user);
+        if (!Buffer.isBuffer(imageBuffer)) {
+          return res.status(500).json({ error: 'Invalid image format' });
+        }
+        const base64Image = Buffer.from(imageBuffer).toString('base64');
+        const imageUrl = `data:image;base64,${base64Image}`;
+        const userData = {
+          about: user[0][0].about,
+          imageUrl: imageUrl,
+        }
+  
+        return res.status(200).json(userData);
+      } catch (error) {
+        return res.status(500).json({ error: 'Internal Server Error: ' + error });
+      }
     }
   } catch (error) {
     return res.status(500).json({ error: 'Internal Server Error: ' + error });
@@ -188,17 +207,16 @@ router.put('/update', async (req, res) => {
 });
 
 const verifiedUser = async (req) => {
-  const token = req.headers['authorization'].split(' ')[1].slice(0, -1);
+  const token = req.headers['authorization'].split(' ')[1];
   const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
     if (err) {
+      if (err.expiredAt) {
+        console.log("token expired");
+      }
+      console.log("error occured", err);
       return false;
-    }
-    const isTokenExpired = Date.now() >= user.exp * 1000;
-
-    if (isTokenExpired) {
-      return false; //expired token
-    } else {
-      return user;
+    }else{
+    return user;
     }
   });
   return isValidUser;

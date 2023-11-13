@@ -1,3 +1,4 @@
+const { getUserById } = require('../routes/userRoutes.js');
 const jwt = require('jsonwebtoken');
 const request = require('request-promise');
 const server = require('../server.js');
@@ -32,7 +33,7 @@ async function authenticateToken(req, res) {
   }
   if (!flag) {
     //Token received, we must verify it
-    jwt.verify(token, 'MyToKeN', (err, user) => {
+    jwt.verify(token, 'MyToKeN', async (err, user) => {
       if (err) {
         //If token exists but invalid, return error and redirect to login page
         return res.status(403).json({ error: 'Forbidden | Invalid Token!' });

@@ -9,7 +9,7 @@ const user = {
 };
 
 // Create a JWT token when the user logs in (typically during authentication)
-const token = jwt.sign(user, secretKey, { expiresIn: '1h' });
+const token = jwt.sign(user, secretKey, { expiresIn: '10h' });
 
 // The token is then sent to the client (e.g., as a response to a successful login request)
 console.log('JWT token:', token);
