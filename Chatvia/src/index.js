@@ -6,8 +6,8 @@ import * as serviceWorker from './serviceWorker';
 import { Provider } from 'react-redux';
 import { configureStore } from './redux/store';
 import { BrowserRouter } from 'react-router-dom';
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
+import { isUserAuthenticated } from './helpers/authUtils';
+const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Provider store={configureStore()}>
     <React.Fragment>

@@ -18,7 +18,6 @@ async function authenticateToken(req, res) {
       body: req.body,
       json: true,
     };
-
     await request(requestOptions)
       .then((response) => {
         if (response.token) {

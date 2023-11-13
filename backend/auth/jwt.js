@@ -21,15 +21,6 @@ console.log('JWT token:', token);
 // Authorization: Bearer <token>
 
 // On the server side, you can validate and decode the token to identify the user.
-const verifyToken = (token) => {
-  try {
-    const decoded = jwt.verify(token, secretKey);
-    return decoded;
-  } catch (err) {
-    console.error('JWT verification failed:', err);
-    return null;
-  }
-};
 
 // Sample usage of token verification:
 const userToken = token; // Replace with a valid token.

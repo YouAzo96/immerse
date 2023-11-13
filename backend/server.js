@@ -41,7 +41,6 @@ const userHasContactRoutes = require('./routes/userHasContactRoutes');
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
-app.use('/api/user/contact', userHasContactRoutes);
 app.use('/api/conversation/participant', conversationHasParticipantRoutes);
 
 // Connect to the MySQL server

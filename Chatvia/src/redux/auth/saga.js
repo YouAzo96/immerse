@@ -6,6 +6,7 @@ import {
   LOGOUT_USER,
   REGISTER_USER,
   FORGET_PASSWORD,
+  CODE_SENT,
 } from './constants';
 
 import {
@@ -14,6 +15,7 @@ import {
   forgetPasswordSuccess,
   apiError,
   logoutUserSuccess,
+  codeSentSuccess,
 } from './actions';
 import { setLoggedInUser } from '../../helpers/authUtils';
 
@@ -72,10 +74,23 @@ function* register({ payload: { user } }) {
 /**
  * forget password
  */
-function* forgetPassword({ payload: { email } }) {
+function* forgetPassword({ payload: { email, password, verifCode } }) {
   try {
-    const response = yield call(create, '/forget-pwd', { email });
-    yield put(forgetPasswordSuccess(response));
+    const response = yield call(create, '/users/forget-pwd', {
+      email,
+      password,
+      verifCode,
+    });
+    yield put(forgetPasswordSuccess(response.success));
+  } catch (error) {
+    yield put(apiError(error));
+  }
+}
+
+function* codeSent({ payload: { email } }) {
+  try {
+    const response = yield call(create, '/users/code-gen', { email });
+    yield put(codeSentSuccess(response.success));
   } catch (error) {
     yield put(apiError(error));
   }
@@ -84,7 +99,9 @@ function* forgetPassword({ payload: { email } }) {
 export function* watchLoginUser() {
   yield takeEvery(LOGIN_USER, login);
 }
-
+export function* watchCodeSent() {
+  yield takeEvery(CODE_SENT, codeSent);
+}
 export function* watchLogoutUser() {
   yield takeEvery(LOGOUT_USER, logout);
 }
@@ -99,6 +116,7 @@ export function* watchForgetPassword() {
 
 function* authSaga() {
   yield all([
+    fork(watchCodeSent),
     fork(watchLoginUser),
     fork(watchLogoutUser),
     fork(watchRegisterUser),

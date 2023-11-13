@@ -23,7 +23,13 @@ const isUserAuthenticated = () => {
     return false;
   }
 };
-
+const getLoggedInUserInfo = () => {
+  if (isUserAuthenticated) {
+    return jwtDecode(getLoggedInUser());
+  } else {
+    return false;
+  }
+};
 /**
  * Sets the logged in user
  */
@@ -39,4 +45,9 @@ const getLoggedInUser = () => {
   return user ? (typeof user == 'object' ? user : JSON.parse(user)) : null;
 };
 
-export { isUserAuthenticated, setLoggedInUser, getLoggedInUser };
+export {
+  isUserAuthenticated,
+  setLoggedInUser,
+  getLoggedInUser,
+  getLoggedInUserInfo,
+};

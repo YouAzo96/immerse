@@ -4,6 +4,9 @@ const authMiddleware = require('../auth/authMiddleware.js');
 const bc = require('bcrypt');
 const { db } = require('../server.js');
 const request = require('request-promise');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
 
 // Route for user registration
 router.post('/register', async (req, res) => {
@@ -29,26 +32,7 @@ router.post('/register', async (req, res) => {
     await db.promise().query(sql, values);
 
     req.body = { username: req.body.email, password: req.body.password };
-    authMiddleware(req, res);
-    /*
-    //authenticate user:
-    const requestOptions = {
-      method: 'POST',
-      uri: `/login`,
-      body: { username: email, password: password },
-      json: true,
-    };
-
-    await request(requestOptions)
-      .then((response) => {
-        if (response.token) {
-          return res.status(200).json({ token: response.token, status: 200 }); //send token back to front end.
-        }
-      })
-      .catch((error) => {
-        return res.status(400).json(error.error);
-      });
-      */
+    authMiddleware(req, res); //authenticate user after registration
   } catch (err) {
     return res.status(500).json({ error: 'User registration failed: ' + err });
   }
@@ -56,66 +40,160 @@ router.post('/register', async (req, res) => {
 
 // Route for user login
 router.post('/login', authMiddleware);
+//Generate verification code for password reset process
+router.post('/code-gen', async (req, res) => {
+  try {
+    const [resp, fields] = await db
+      .promise()
+      .query('SELECT user_id FROM User WHERE email = ?', [
+        req.body.username ? req.body.username : req.body.email,
+      ]);
+    if (!resp[0]) {
+      return res.status(403).json({ error: 'User not found' });
+    } else {
+      console.log(resp[0].user_id);
+      //generate code and store in DB
+      const verificationCode = generateVerificationCode();
+      await db
+        .promise()
+        .query('UPDATE USER set verif_code= ? where user_id= ?;', [
+          verificationCode,
+          resp[0].user_id,
+        ]);
+      //Send Email to user with value of: verificationCode
+      const mailOptions = {
+        from: 'your_email@gmail.com',
+        to: req.body.email,
+        subject: 'Password Reset Verification Code',
+        text: `Your verification code is: ${verificationCode}`,
+      };
 
-// GET a user by user_id, might be used to fetch contacts
-router.get('/:user_id', async (req, res) => {
-  const { user_id } = req.params;
+      //await transporter.sendMail(mailOptions); //send email.
+
+      return res.status(200).json({
+        success: 'Code Sent (valid for 15 min), Please Check Your Email',
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+  }
+});
+
+//Forget password
+router.post('/forget-pwd', async (req, res) => {
+  const username = req.body.username ? req.body.username : req.body.email;
+  const { password, verifCode } = req.body;
+  try {
+    const [dbresp, fields] = await db
+      .promise()
+      .query('SELECT user_id,verif_code FROM User WHERE email = ?', [username]);
+    console.log();
+    if (!dbresp[0]) {
+      return res.status(403).json({ error: 'User Not Found!' });
+    } else if (dbresp[0].verif_code === null) {
+      return res
+        .status(404)
+        .json({ error: 'Please send verification code first!' });
+    } else {
+      if (dbresp[0].verif_code === verifCode) {
+        // Generate a salt and hash the password
+        const salt = await bc.genSalt();
+        const newpassword = await bc.hash(password, salt);
+        await db
+          .promise()
+          .query('UPDATE USER set password=? where user_id=?;', [
+            newpassword,
+            dbresp[0].user_id,
+          ]);
+        return res
+          .status(200)
+          .json({ success: 'Password Changed Successfully!' });
+      } else {
+        return res.status(403).json({ error: 'Invalid Verification Code!' });
+      }
+    }
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+  }
+});
+
+// GET a user by email
+
+router.get('/me', async (req, res) => {
+  const isValidUser = verifiedUser(req);
+  if (!isValidUser) {
+    return res.status(405).json({ error: 'Invalid Token' });
+  }
   try {
     const user = await db
       .promise()
-      .query('SELECT * FROM User WHERE user_id = ?', [user_id]);
+      .query('SELECT about,image FROM User WHERE email = ?', [
+        isValidUser.username,
+      ]);
     if (user.length === 0) {
-      res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'User not found' });
     } else {
-      res.json(user[0]);
+      return res.status(200).json(user[0]);
     }
   } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error: ' + error });
   }
 });
 
-// Fetch Logged in User
-router.get('/me', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  const user = await getUserById(userId);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+//Get Contacts
+router.get('/contacts', async (req, res) => {
+  const isValidUser = verifiedUser(req);
+  if (!isValidUser) {
+    return res.status(405).json({ error: 'Invalid Token' });
   }
-  res.json(user);
+  try {
+    const [results, flds] = await db.promise().query(
+      'SELECT u.user_id,u.fname,u.lname,u.email FROM user u \
+        JOIN userhascontact uc ON u.user_id = uc.contact_id \
+        WHERE uc.user_id = ?;',
+      [isValidUser.user_id]
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error: ' + error });
+  }
 });
 
 // PUT (update) a user's information
-router.put('/:user_id', async (req, res) => {
-  const { user_id } = req.params;
+router.put('/update', async (req, res) => {
+  const isValidUser = verifiedUser(req);
+  if (!isValidUser) {
+    return res.status(405).json({ error: 'Invalid Token' });
+  }
+
   const { email, fname, lname } = req.body;
   try {
     await db
       .promise()
       .query(
-        'UPDATE User SET email = ?, fname = ?, lname = ? WHERE user_id = ?',
-        [email, fname, lname, user_id]
+        'UPDATE User SET email = ?, fname = ?, lname = ? WHERE email = ?',
+        [email, fname, lname, isValidUser.username]
       );
-    res.json({ message: 'User updated successfully' });
+    return res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error: ' + error });
   }
 });
 
-async function getUserById(userId) {
-  try {
-    const user = await db
-      .promise()
-      .query('SELECT * FROM User WHERE user_id = ?', [userId]);
-    if (user.length === 0) {
-      return null;
-    } else {
-      return user[0];
+const verifiedUser = (req) => {
+  const token = req.headers['authorization'].split(' ')[1].slice(0, -1);
+  const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
+    if (err) {
+      return false;
     }
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    throw error;
-  }
-}
+    return user;
+  });
+  return isValidUser;
+};
+
+const generateVerificationCode = () => {
+  const code = crypto.randomBytes(2).toString('hex'); // Generate a 4-digit code
+  return code;
+};
 
 module.exports = router;

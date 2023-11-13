@@ -8,6 +8,8 @@ import {
   FORGET_PASSWORD,
   FORGET_PASSWORD_SUCCESS,
   API_FAILED,
+  CODE_SENT,
+  CODE_SENT_SUCCESS,
 } from './constants';
 
 export const loginUser = (username, password, history) => ({
@@ -42,13 +44,21 @@ export const logoutUserSuccess = () => {
   };
 };
 
-export const forgetPassword = (email) => ({
+export const forgetPassword = (email, password, verifCode) => ({
   type: FORGET_PASSWORD,
-  payload: { email },
+  payload: { email, password, verifCode },
 });
-
 export const forgetPasswordSuccess = (passwordResetStatus) => ({
   type: FORGET_PASSWORD_SUCCESS,
+  payload: passwordResetStatus,
+});
+
+export const codeSent = (email) => ({
+  type: CODE_SENT,
+  payload: { email },
+});
+export const codeSentSuccess = (passwordResetStatus) => ({
+  type: CODE_SENT_SUCCESS,
   payload: passwordResetStatus,
 });
 
