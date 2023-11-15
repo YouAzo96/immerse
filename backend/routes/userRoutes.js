@@ -32,7 +32,8 @@ router.post('/register', async (req, res) => {
     await db.promise().query(sql, values);
 
     req.body = { username: req.body.email, password: req.body.password };
-    authMiddleware(req, res); //authenticate user after registration
+    //authenticate user after registration
+    authMiddleware(req, res);
   } catch (err) {
     return res.status(500).json({ error: 'User registration failed: ' + err });
   }
@@ -120,9 +121,10 @@ router.post('/forget-pwd', async (req, res) => {
 // GET a user by email
 
 router.get('/me', async (req, res) => {
-  const isValidUser = verifiedUser(req);
+  const isValidUser = await verifiedUser(req);
+  console.log(isValidUser);
   if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Token' });
+    return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
   try {
     const user = await db
@@ -142,9 +144,9 @@ router.get('/me', async (req, res) => {
 
 //Get Contacts
 router.get('/contacts', async (req, res) => {
-  const isValidUser = verifiedUser(req);
+  const isValidUser = await verifiedUser(req);
   if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Token' });
+    return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
   try {
     const [results, flds] = await db.promise().query(
@@ -159,34 +161,45 @@ router.get('/contacts', async (req, res) => {
   }
 });
 
-// PUT (update) a user's information
+// PUT (update) a user's information: image or status
 router.put('/update', async (req, res) => {
-  const isValidUser = verifiedUser(req);
+  const isValidUser = await verifiedUser(req);
   if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Token' });
+    return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
 
-  const { email, fname, lname } = req.body;
+  const { image, status } = req.body;
   try {
-    await db
-      .promise()
-      .query(
-        'UPDATE User SET email = ?, fname = ?, lname = ? WHERE email = ?',
-        [email, fname, lname, isValidUser.username]
-      );
+    let sql = '';
+    let props = [];
+    if (image) {
+      sql = 'UPDATE User SET image = ? WHERE user_id = ?';
+      props = [image, isValidUser.user_id];
+    } else if (status) {
+      sql = 'UPDATE User SET status = ?,  WHERE user_id = ?';
+      props = [status, isValidUser.user_id];
+    }
+    await db.promise().query(sql, props);
+
     return res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
     return res.status(500).json({ error: 'Internal Server Error: ' + error });
   }
 });
 
-const verifiedUser = (req) => {
+const verifiedUser = async (req) => {
   const token = req.headers['authorization'].split(' ')[1].slice(0, -1);
   const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
     if (err) {
       return false;
     }
-    return user;
+    const isTokenExpired = Date.now() >= user.exp * 1000;
+
+    if (isTokenExpired) {
+      return false; //expired token
+    } else {
+      return user;
+    }
   });
   return isValidUser;
 };

@@ -21,8 +21,8 @@ describe('User routes', () => {
         lname: 'Doe',
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body.token).toBeDefined();
-    }, 10000);
+      expect(res.token).toBeDefined();
+    });
 
     it('should return an error if registration fails', async () => {
       const res = await request(router).post('/api/users/register').send({
