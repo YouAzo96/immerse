@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { connect, useDispatch } from "react-redux";
-import { getLoggedInUserInfo, isUserAuthenticated } from "../../helpers/authUtils";
 
 import { TabContent, TabPane } from "reactstrap";
 
@@ -10,7 +9,7 @@ import Chats from "./Tabs/Chats";
 import Groups from "./Tabs/Groups";
 import Contacts from "./Tabs/Contacts";
 import Settings from "./Tabs/Settings";
-import { fetchUserProfile, logoutUser } from '../../redux/actions';
+import { fetchUserProfile } from '../../redux/actions';
 import { useSelector } from 'react-redux';
 
 function ChatLeftSidebar(props) {
@@ -30,9 +29,9 @@ function ChatLeftSidebar(props) {
             const userData = {
                 fname: loggedInUserData.fname,
                 lname: loggedInUserData.lname,
-                username: loggedInUserData.username,
+                email: loggedInUserData.email,
                 about: loggedInUserData.about,
-                imageUrl: loggedInUserData.imageUrl,
+                image: loggedInUserData.image,
             }
         setUser(userData);
         setIsUserLoaded(true);

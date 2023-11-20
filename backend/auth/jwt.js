@@ -4,7 +4,7 @@ const secretKey = 'MyToKeN'; // Replace with a secret key for your application.
 // Sample user data (in a real application, you would fetch this from a database)
 const user = {
   id: 123,
-  username: 'exampleuser',
+  email: 'exampleuser',
   role: 'user',
 };
 
@@ -28,7 +28,7 @@ const decodedUser = verifyToken(userToken);
 
 if (decodedUser) {
   console.log('User ID:', decodedUser.id);
-  console.log('Username:', decodedUser.username);
+  console.log('email:', decodedUser.email);
   console.log('Role:', decodedUser.role);
 } else {
   console.log('Invalid or expired token.');

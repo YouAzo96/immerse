@@ -1,6 +1,5 @@
 import axios from 'axios';
 import config from '../config';
-import jwt_decode from 'jwt-decode';
 import { isUserAuthenticated } from '../helpers/authUtils';
 
 

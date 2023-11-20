@@ -1,4 +1,4 @@
-import { all, call, fork, put, takeEvery } from 'redux-saga/effects';
+import { all, call, fork, put, select, takeEvery } from 'redux-saga/effects';
 import { APIClient, setAuthorization } from '../../apis/apiClient';
 import {
   LOGIN_USER,
@@ -8,6 +8,7 @@ import {
   CODE_SENT,
   FETCH_USER_PROFILE,
   API_FAILED,
+  UPDATE_USER_PROFILE,
 } from './constants';
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
 import {
@@ -21,6 +22,9 @@ import {
   logoutUser,
 } from './actions';
 import { isUserAuthenticated, setLoggedInUser } from '../../helpers/authUtils';
+import axios from 'axios';
+import isEqual from 'lodash/isEqual';
+import pick from 'lodash/pick';
 
 /**
  * Sets the session
@@ -32,12 +36,12 @@ const get = new APIClient().get;
 
 /**
  * Login the user
- * @param {*} payload - username and password
+ * @param {*} payload - email and password
  */
-function* login({ payload: { username, password, history } }) {
+function* login({ payload: { email, password, history } }) {
   try {
     const response = yield call(create, '/users/login', {
-      username,
+      email,
       password,
     });
     if (response.status === 200) {
@@ -119,7 +123,7 @@ function* fetchUserProfile() {
 
     const user = {
       ...response,
-      imageUrl: response.imageUrl ? response.imageUrl : defaultImage,
+      image: response.image ? response.image : defaultImage,
     }
     yield put(setUserProfile(user));
   }  catch (error) {
@@ -139,6 +143,39 @@ function* apiErrorHandler({ payload: error }) {
   }
 }
 
+// update the user profile
+function* updateUserProfile(action) {
+  console.log("updateUserProfile action is:", action);
+  try {
+    const currentUser = yield select((state) => state.Auth.user);
+    const updatedUser = Object.keys(currentUser).reduce((result, key) => {
+      if (key === 'image' && !action.payload.hasOwnProperty(key)) {
+        result[key] = currentUser[key];
+      } else if (!isEqual(action.payload[key], currentUser[key])) {
+        result[key] = action.payload[key];
+      }
+      return result;
+    }, {});
+
+    if (Object.keys(updatedUser).length > 0) {
+      const token = localStorage.getItem('authUser').replace(/"/g, '');
+      const response = yield call(axios.put, '/users/update', updatedUser, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("updateUserProfile response is:", response);
+      const user = {...currentUser, ...updatedUser};
+      setLoggedInUser(response.token);
+      yield put (setUserProfile(user));
+    } else {
+      console.log("No changes to update");
+    }
+  } catch (error) {
+    console.log("Error in updateUserProfile:", error);
+    yield put(apiError(error));
+  }
+}
 export function* watchLoginUser() {
   yield takeEvery(LOGIN_USER, login);
 }
@@ -164,6 +201,10 @@ export function* watchApiError() {
   yield takeEvery(API_FAILED, apiErrorHandler);
 }
 
+export function* watchUpdateUserProfile() {
+  yield takeEvery(UPDATE_USER_PROFILE, updateUserProfile);
+}
+
 
 function* authSaga() {
   yield all([
@@ -174,6 +215,7 @@ function* authSaga() {
     fork(watchForgetPassword),
     fork(watchFetchUserProfile),
     fork(watchApiError),
+    fork(watchUpdateUserProfile),
   ]);
 }
 

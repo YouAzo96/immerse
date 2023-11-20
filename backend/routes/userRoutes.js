@@ -9,6 +9,10 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const { error } = require('console');
 
+
+// Secret key for JWT token
+const secretKey = 'MyToKeN';
+
 // Route for user registration
 router.post('/register', async (req, res) => {
   const { email, fname, lname } = req.body;
@@ -32,7 +36,7 @@ router.post('/register', async (req, res) => {
     //send to DB
     await db.promise().query(sql, values);
 
-    req.body = { username: req.body.email, password: req.body.password };
+    req.body = { email: req.body.email, password: req.body.password };
     //authenticate user after registration
     authMiddleware(req, res);
   } catch (err) {
@@ -48,7 +52,7 @@ router.post('/code-gen', async (req, res) => {
     const [resp, fields] = await db
       .promise()
       .query('SELECT user_id FROM User WHERE email = ?', [
-        req.body.username ? req.body.username : req.body.email,
+        req.body.email ? req.body.email : req.body.email,
       ]);
     if (!resp[0]) {
       return res.status(403).json({ error: 'User not found' });
@@ -83,13 +87,12 @@ router.post('/code-gen', async (req, res) => {
 
 //Forget password
 router.post('/forget-pwd', async (req, res) => {
-  const username = req.body.username ? req.body.username : req.body.email;
+  const email = req.body.email ? req.body.email : req.body.email;
   const { password, verifCode } = req.body;
   try {
     const [dbresp, fields] = await db
       .promise()
-      .query('SELECT user_id,verif_code FROM User WHERE email = ?', [username]);
-    console.log();
+      .query('SELECT user_id,verif_code FROM User WHERE email = ?', [email]);
     if (!dbresp[0]) {
       return res.status(403).json({ error: 'User Not Found!' });
     } else if (dbresp[0].verif_code === null) {
@@ -124,30 +127,28 @@ router.post('/forget-pwd', async (req, res) => {
 router.get('/me', async (req, res) => {
   try {
     const isValidUser = await verifiedUser(req);
-    console.log("isValidUser is:", isValidUser);
 
     const user = await db
       .promise()
       .query('SELECT about,image FROM User WHERE email = ?', [
-        isValidUser.username,
+        isValidUser.email,
       ]);
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     } else {
       try {
         if (!user[0][0].image) {
-          return res.status(200).json({ about: user[0][0].about, imageUrl: null });
+          return res.status(200).json({ about: user[0][0].about, image: null });
         }
         const imageBuffer = user[0][0].image;
-        console.log(user);
         if (!Buffer.isBuffer(imageBuffer)) {
           return res.status(500).json({ error: 'Invalid image format' });
         }
         const base64Image = Buffer.from(imageBuffer).toString('base64');
-        const imageUrl = `data:image;base64,${base64Image}`;
+        const image = `data:image;base64,${base64Image}`;
         const userData = {
           about: user[0][0].about,
-          imageUrl: imageUrl,
+          image: image,
         }
   
         return res.status(200).json(userData);
@@ -187,31 +188,60 @@ router.put('/update', async (req, res) => {
     return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
 
-  const { image, status } = req.body;
   try {
-    let sql = '';
-    let props = [];
-    if (image) {
-      sql = 'UPDATE User SET image = ? WHERE user_id = ?';
-      props = [image, isValidUser.user_id];
-    } else if (status) {
-      sql = 'UPDATE User SET status = ?,  WHERE user_id = ?';
-      props = [status, isValidUser.user_id];
-    }
-    await db.promise().query(sql, props);
+    const updates = [];
+    const values = [];
 
-    return res.status(200).json({ message: 'User updated successfully' });
+    for (let key in req.body) {
+      if (key === 'image') {
+        updates.push(`${key} = ?`);
+        values.push(Buffer.from(req.body[key], 'base64'));
+      } else if (typeof req.body[key] === 'string') {
+        updates.push(`${key} = ?`);
+        values.push(req.body[key]);
+      } else {
+        for (let subKey in req.body[key]) {
+          updates.push(`${key}.${subKey} = ?`);
+          values.push(req.body[key][subKey]);
+        }
+      }
+    }
+
+    values.push(isValidUser.user_id);
+
+    const sql = `UPDATE User SET ${updates.join(', ')} WHERE user_id = ?`;
+
+    await db.promise().query(sql, values);
+
+    const [rows] = await db.promise().query('SELECT * FROM User WHERE user_id = ?', [isValidUser.user_id]);
+    const updatedUser = rows[0];
+
+    const newToken = jwt.sign(
+      {
+        user_id: updatedUser.user_id,
+        fname: updatedUser.fname,
+        lname: updatedUser.lname,
+        email: updatedUser.email,
+      },
+      secretKey,
+      {
+        expiresIn: '10hr',
+      }
+    );
+
+    return res.status(200).json({ message: 'User updated successfully', token: newToken });
   } catch (error) {
+    console.log("Error in /update:", error);
     return res.status(500).json({ error: 'Internal Server Error: ' + error });
   }
 });
+
 
 const verifiedUser = async (req) => {
   try {
     const token = req.headers['authorization'].split(' ')[1];
     const user = await new Promise((resolve, reject) => {
       jwt.verify(token, 'MyToKeN', (err, decoded) => {
-        console.log("expiredAt:", decoded);
         if (err) {
           if (err.expiredAt) {
             reject('Token expired');

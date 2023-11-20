@@ -28,13 +28,13 @@ app.use(bodyParser.json());
 
 // Endpoint for user authentication
 app.post('/auth', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   // User Authentication:
   let user = null;
   try {
     const sql =
       'SELECT user_id,email,fname,lname,password FROM user WHERE email = ?;';
-    const [results, fields] = await db.promise().query(sql, [username]);
+    const [results, fields] = await db.promise().query(sql, [email]);
 
     if (results.length === 0) {
       return res.status(403).json({ error: 'User Not Found!' }); //'User not found!
@@ -51,7 +51,7 @@ app.post('/auth', async (req, res) => {
   const token = jwt.sign(
     {
       user_id: user.user_id,
-      username: user.email,
+      email: user.email,
       fname: user.fname,
       lname: user.lname,
     },
