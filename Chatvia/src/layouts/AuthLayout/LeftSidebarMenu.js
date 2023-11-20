@@ -142,7 +142,7 @@ function LeftSidebarMenu(props) {
                         </UncontrolledTooltip>
                         <Dropdown nav isOpen={dropdownOpenMobile} toggle={toggleMobile} className="profile-user-dropdown d-inline-block d-lg-none dropup">
                             <DropdownToggle nav>
-                                <img src={user.imageUrl} alt="chatvia" className="profile-user rounded-circle" />
+                                <img src={user.image} alt="chatvia" className="profile-user rounded-circle" />
                             </DropdownToggle>
                             <DropdownMenu className="dropdown-menu-end">
                                 <DropdownItem onClick={() => { toggleTab('profile'); }}>Profile <i className="ri-profile-line float-end text-muted"></i></DropdownItem>
@@ -193,7 +193,7 @@ function LeftSidebarMenu(props) {
                         </li>
                         <Dropdown nav isOpen={dropdownOpen} className="nav-item btn-group dropup profile-user-dropdown" toggle={toggle}>
                             <DropdownToggle className="nav-link mb-2" tag="a">
-                                <img src={user.imageUrl} alt="" className="profile-user rounded-circle" />
+                                <img src={user.image} alt="" className="profile-user rounded-circle" />
                             </DropdownToggle>
                             <DropdownMenu>
                                 <DropdownItem onClick={() => { toggleTab('profile'); }}>Profile <i className="ri-profile-line float-end text-muted"></i></DropdownItem>

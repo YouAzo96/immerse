@@ -43,6 +43,7 @@ const getLoggedInUser = () => {
  */
 const setLoggedInUser = (user) => {
   localStorage.setItem('authUser', JSON.stringify(user));
+  window.location.reload();
 };
 
 

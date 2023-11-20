@@ -70,7 +70,7 @@ function Profile(props) {
         <div className="text-center p-4 border-bottom">
           <div className="mb-4">
             <img
-              src={user?.imageUrl}
+              src={user?.image}
               className="rounded-circle avatar-lg img-thumbnail"
               alt="chatvia"
             />
@@ -112,7 +112,7 @@ function Profile(props) {
 
                 <div className="mt-4">
                   <p className="text-muted mb-1">{t("Email")}</p>
-                  <h5 className="font-size-14">{t(user.username)}</h5>
+                  <h5 className="font-size-14">{t(user.email)}</h5>
                 </div>
               </CustomCollapse>
             </Card>

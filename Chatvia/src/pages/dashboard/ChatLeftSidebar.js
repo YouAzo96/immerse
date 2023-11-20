@@ -29,9 +29,9 @@ function ChatLeftSidebar(props) {
             const userData = {
                 fname: loggedInUserData.fname,
                 lname: loggedInUserData.lname,
-                username: loggedInUserData.username,
+                email: loggedInUserData.email,
                 about: loggedInUserData.about,
-                imageUrl: loggedInUserData.imageUrl,
+                image: loggedInUserData.image,
             }
         setUser(userData);
         setIsUserLoaded(true);

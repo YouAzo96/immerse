@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Dropdown, DropdownMenu, DropdownItem, DropdownToggle, Card, Button, UncontrolledDropdown, Input, Label } from "reactstrap";
 import { Link } from "react-router-dom";
-
+import { useDispatch } from 'react-redux';
+import { readAndCompressImage } from 'browser-image-resizer';
 import SimpleBar from "simplebar-react";
 
 //Import components
@@ -9,14 +10,24 @@ import CustomCollapse from "../../../components/CustomCollapse";
 
 //i18n
 import { useTranslation } from 'react-i18next';
+import { setUserProfile, updateUserProfile } from '../../../redux/actions';
 
 function Settings(props) {
+    const dispatch = useDispatch();
     const user = props.user;
+    const [fname, setFname] = useState(user.fname);
+    const [lname, setLname] = useState(user.lname);
+    const [email, setemail] = useState(user.email);
+    const [about, setAbout] = useState(user.about);    
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [isOpen1, setIsOpen1] = useState(true);
     const [isOpen2, setIsOpen2] = useState(false);
     const [isOpen3, setIsOpen3] = useState(false);
     const [isOpen4, setIsOpen4] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [preview, setPreview] = useState(user.image);
+    const [file, setFile] = useState(null);
+    const fileInputRef = useRef();
 
     /* intilize t variable for multi language implementation */
     const { t } = useTranslation();
@@ -49,6 +60,63 @@ function Settings(props) {
         setIsOpen2(false);
     };
 
+    const toggleEditing = () => {
+        setIsEditing(true);
+    };
+
+    const saveEditing = () => {
+        setIsEditing(false);
+        const updatedUser = { 
+            ...user, 
+            fname: fname,
+            lname: lname,
+            email: email, 
+            about: about
+        };
+        console.log("updatedUser:", updatedUser);
+        dispatch(updateUserProfile(updatedUser));
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const config = {
+            quality: 0.7,
+            maxWidth: 800,
+            maxHeight: 800,
+            autoRotate: true,
+            debug: true,
+          };
+          try {
+            const optimizedImageFile = await readAndCompressImage(file, config);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64String = reader.result;
+              if (base64String.length < 102400) { // Check base64 string size (102400 bytes = 100 KB)
+                setPreview(base64String);
+                setFile(base64String);
+              } else {
+                alert('File is too large');
+              }
+            };
+            reader.readAsDataURL(optimizedImageFile);
+          } catch (error) {
+            console.error('Error in optimizing image:', error);
+          }
+        } else {
+          alert('No file selected');
+        }
+      };
+    
+      const handleUpload = () => {
+        const base64Image = file.split(',')[1];
+        dispatch(updateUserProfile({image: base64Image}));
+      };
+
+    const handleEditPicture = () => {
+        fileInputRef.current.click();
+    };
+
     const toggle = () => setDropdownOpen(!dropdownOpen);
 
     return (
@@ -60,11 +128,16 @@ function Settings(props) {
 
                 <div className="text-center border-bottom p-4">
                     <div className="mb-4 profile-user">
-                        <img src={user.imageUrl} className="rounded-circle avatar-lg img-thumbnail" alt="chatvia" />
-                        <Button type="button" color="light" className="avatar-xs p-0 rounded-circle profile-photo-edit">
+                        <img src={preview} className="rounded-circle avatar-lg img-thumbnail" alt="chatvia" />
+                        <Button type="button" color="light" className="avatar-xs p-0 rounded-circle profile-photo-edit" onClick={handleEditPicture}>
                             <i className="ri-pencil-fill"></i>
                         </Button>
-
+                      <input type="file" className="d-none" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none'}} />
+                      {preview !== user.image && (
+                        <div>
+                          <button onClick={handleUpload}>Upload</button>
+                          </div>
+                        )}
                     </div>  
 
                     <h5 className="font-size-16 mb-1 text-truncate">{t(user.fname + " " + user.lname)}</h5>
@@ -92,28 +165,58 @@ function Settings(props) {
                                 toggleCollapse={toggleCollapse1}
                             >
 
-                                <div className="float-end">
-                                    <Button color="light" size="sm" type="button" ><i className="ri-edit-fill me-1 align-middle"></i> {t('Edit')}</Button>
+                                <div className="float-end mt-2 mb-2">
+                                  {isEditing ? (  
+                                    <Button color="light" size="sm" type="button" onClick={saveEditing} ><i className="ri-save-fill me-1 align-middle"></i> {t('Save')}</Button>
+                                  ) : (
+                                    <Button color="light" size="sm" type="button" onClick={toggleEditing}><i className="ri-edit-fill me-1 align-middle"></i> {t('Edit')}</Button>
+                                  )}
                                 </div>
 
                                 <div>
-                                    <p className="text-muted mb-1">{t('Name')}</p>
-                                    <h5 className="font-size-14">{t(user.fname + " " + user.lname)}</h5>
+                                  <p className="text-muted mb-1">{t('Name')}</p>
+                                    {isEditing ? (
+                                      <Input 
+                                      type="text" 
+                                      className="form-control" 
+                                      value={t(fname + " " + lname)}
+                                      onChange={(e) => {
+                                        const [newFname, newLname] = e.target.value.split(" ");
+                                        setFname(newFname);
+                                        setLname(newLname);
+                                      }}
+                                     />
+                                    ) : (
+                                      <h5 className="font-size-14">{t(user.fname + " " + user.lname)}</h5>
+                                    )}
                                 </div>
 
                                 <div className="mt-4">
-                                    <p className="text-muted mb-1">{t('Email')}</p>
-                                    <h5 className="font-size-14">{t(user.username)}</h5>
+                                  <p className="text-muted mb-1">{t('Email')}</p>
+                                    {isEditing ? (
+                                       <Input
+                                       type="email"
+                                       className="form-control"
+                                       value={t(email)}
+                                       onChange={e => setemail(e.target.value)}
+                                     />
+                                    ) : (
+                                      <h5 className="font-size-14">{t(user.email)}</h5>
+                                    )}
                                 </div>
 
                                 <div className="mt-4">
-                                    <p className="text-muted mb-1">{t('Time')}</p>
-                                    <h5 className="font-size-14">{t('11:40 AM')}</h5>
-                                </div>
-
-                                <div className="mt-4">
-                                    <p className="text-muted mb-1">{t('Location')}</p>
-                                    <h5 className="font-size-14 mb-0">{t('California, USA')}</h5>
+                                  <p className="text-muted mb-1">{t('About')}</p>
+                                    {isEditing ? (
+                                       <Input
+                                       type="about"
+                                       className="form-control"
+                                       value={t(about)}
+                                       onChange={e => setAbout(e.target.value)}
+                                     />
+                                    ) : (
+                                      <h5 className="font-size-14">{t(user.about)}</h5>
+                                    )}
                                 </div>
                             </CustomCollapse>
                             

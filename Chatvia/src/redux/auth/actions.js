@@ -12,11 +12,12 @@ import {
   FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
+  UPDATE_USER_PROFILE,
 } from './constants';
 
-export const loginUser = (username, password, history) => ({
+export const loginUser = (email, password, history) => ({
   type: LOGIN_USER,
-  payload: { username, password, history },
+  payload: { email, password, history },
 });
 
 export const loginUserSuccess = (user) => ({
@@ -74,7 +75,12 @@ export const fetchUserProfile = () => ({
   payload: {},
 });
 
-export const setUserProfile = (userData) => ({
+export const setUserProfile = (user) => ({
   type: FETCH_USER_PROFILE_SUCCESS,
-  payload: userData,
+  payload: user,
+});
+
+export const updateUserProfile = (user) => ({
+  type: UPDATE_USER_PROFILE,
+  payload: user,
 });

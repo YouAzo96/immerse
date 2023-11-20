@@ -18,15 +18,14 @@ const INIT_STATE = {
   user: {
     fname: getLoggedInUserInfo()?.fname,
     lname: getLoggedInUserInfo()?.lname,
-    username: getLoggedInUserInfo()?.username,
+    email: getLoggedInUserInfo()?.email,
     about: getLoggedInUser()?.about,
-    imageUrl: getLoggedInUser()?.imageUrl,},
+    image: getLoggedInUser()?.image,},
   loading: false,
   isUserLogout: false,
   error: null,
 };
 
-console.log("INIT_STATE", INIT_STATE);
 
 const Auth = (state = INIT_STATE, action) => {
   switch (action.type) {
@@ -76,7 +75,7 @@ const Auth = (state = INIT_STATE, action) => {
         return { ...state,
               user: {...INIT_STATE.user,
                 about: action.payload.about,
-                imageUrl: action.payload.imageUrl},
+                image: action.payload.image},
              loading: false, 
              error: null
         };
