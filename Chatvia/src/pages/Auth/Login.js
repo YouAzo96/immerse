@@ -71,7 +71,7 @@ const Login = (props) => {
   //TODO: Send request to verify this token before of forwarding.
   if (localStorage.getItem('authUser')) {
     return <Navigate to="/" />;
-  }
+  } 
 
   document.title = 'Login | Immerse: Real-Time Chat App';
 
@@ -217,10 +217,7 @@ const Login = (props) => {
                   </Link>{' '}
                 </p>
                 <p>
-                  © {new Date().getFullYear()} {t('Immerse')}.{' '}
-                  {t('Crafted with')}{' '}
-                  <i className="mdi mdi-heart text-danger"></i>{' '}
-                  {t('by Themesbrand')}
+                  © {new Date().getFullYear()} {t('Immerse')}.
                 </p>
               </div>
             </Col>

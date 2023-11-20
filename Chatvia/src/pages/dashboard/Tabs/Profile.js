@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dropdown,
   DropdownMenu,
@@ -11,25 +11,12 @@ import {
 import CustomCollapse from '../../../components/CustomCollapse';
 import AttachedFiles from '../../../components/AttachedFiles';
 
-//Import Images
-import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 
 //i18n
 import { useTranslation } from "react-i18next";
-import { getLoggedInUserInfo } from "../../../helpers/authUtils";
-import { fetchUserProfile } from "../../../redux/actions";
-import { useDispatch, useSelector } from "react-redux";
 
 function Profile(props) {
-  const user = getLoggedInUserInfo();
-  const dispatch = useDispatch();
-  const userData = useSelector((state) => state.Auth.user);
-  console.log(userData);
-  useEffect(() => {
-    console.log("fetching user profile");
-    dispatch(fetchUserProfile());
-  }, [dispatch]);
-
+  const user = props.user;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isOpen1, setIsOpen1] = useState(true);
@@ -83,14 +70,14 @@ function Profile(props) {
         <div className="text-center p-4 border-bottom">
           <div className="mb-4">
             <img
-              src={userData.imageUrl}
+              src={user?.imageUrl}
               className="rounded-circle avatar-lg img-thumbnail"
               alt="chatvia"
             />
           </div>
 
           <h5 className="font-size-16 mb-1 text-truncate">
-            {t(user.fname + " " + user.lname)}
+            {t((user.fname + " " + user.lname) || "User")}
           </h5>
           <p className="text-muted text-truncate mb-1">
             <i className="ri-record-circle-fill font-size-10 text-success me-1 d-inline-block"></i>{' '}
@@ -104,7 +91,7 @@ function Profile(props) {
           <div className="text-muted">
             <p className="mb-4">
               {t(
-                userData.about
+                user?.about
               )}
             </p>
           </div>

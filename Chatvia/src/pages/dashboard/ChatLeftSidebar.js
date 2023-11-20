@@ -1,5 +1,5 @@
-import React from 'react';
-import { connect } from "react-redux";
+import React, { useEffect, useState } from 'react';
+import { connect, useDispatch } from "react-redux";
 
 import { TabContent, TabPane } from "reactstrap";
 
@@ -9,10 +9,42 @@ import Chats from "./Tabs/Chats";
 import Groups from "./Tabs/Groups";
 import Contacts from "./Tabs/Contacts";
 import Settings from "./Tabs/Settings";
+import { fetchUserProfile } from '../../redux/actions';
+import { useSelector } from 'react-redux';
 
 function ChatLeftSidebar(props) {
-
+    const dispatch = useDispatch();
     const activeTab = props.activeTab;
+    const [user, setUser] = useState(null);
+    const [isUserLoaded, setIsUserLoaded] = useState(false);
+    const loggedInUserData = useSelector(state => state.Auth.user);
+
+    useEffect(() => {
+    dispatch(fetchUserProfile());
+    }, [dispatch]);
+
+    useEffect(() => {
+        console.log("loggedInUserData", loggedInUserData);
+        if (loggedInUserData?.about) {
+            const userData = {
+                fname: loggedInUserData.fname,
+                lname: loggedInUserData.lname,
+                username: loggedInUserData.username,
+                about: loggedInUserData.about,
+                imageUrl: loggedInUserData.imageUrl,
+            }
+        setUser(userData);
+        setIsUserLoaded(true);
+        } else if (loggedInUserData === null) {
+          console.log("loggedInUserData is null");
+          window.location.href = "/logout";
+
+        }
+    }, [loggedInUserData]);
+
+    if (!isUserLoaded) {
+    return <div>Loading...</div>;
+    }
 
     return (
         <React.Fragment>
@@ -22,7 +54,7 @@ function ChatLeftSidebar(props) {
                     {/* Start Profile tab-pane */}
                     <TabPane tabId="profile" id="pills-user"   >
                         {/* profile content  */}
-                        <Profile />
+                        <Profile user ={user}/>
                     </TabPane>
                     {/* End Profile tab-pane  */}
 
@@ -50,7 +82,7 @@ function ChatLeftSidebar(props) {
                     {/* Start settings tab-pane */}
                     <TabPane tabId="settings" id="pills-setting">
                         {/* Settings content */}
-                        <Settings />
+                        <Settings user = {user} />
                     </TabPane>
                     {/* End settings tab-pane */}
                 </TabContent>

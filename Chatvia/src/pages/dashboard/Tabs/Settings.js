@@ -7,13 +7,11 @@ import SimpleBar from "simplebar-react";
 //Import components
 import CustomCollapse from "../../../components/CustomCollapse";
 
-//Import Images
-import avatar1 from "../../../assets/images/users/avatar-1.jpg";
-
 //i18n
 import { useTranslation } from 'react-i18next';
 
 function Settings(props) {
+    const user = props.user;
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [isOpen1, setIsOpen1] = useState(true);
     const [isOpen2, setIsOpen2] = useState(false);
@@ -62,14 +60,14 @@ function Settings(props) {
 
                 <div className="text-center border-bottom p-4">
                     <div className="mb-4 profile-user">
-                        <img src={avatar1} className="rounded-circle avatar-lg img-thumbnail" alt="chatvia" />
+                        <img src={user.imageUrl} className="rounded-circle avatar-lg img-thumbnail" alt="chatvia" />
                         <Button type="button" color="light" className="avatar-xs p-0 rounded-circle profile-photo-edit">
                             <i className="ri-pencil-fill"></i>
                         </Button>
 
                     </div>  
 
-                    <h5 className="font-size-16 mb-1 text-truncate">{t('Patricia Smith')}</h5>
+                    <h5 className="font-size-16 mb-1 text-truncate">{t(user.fname + " " + user.lname)}</h5>
                     <Dropdown isOpen={dropdownOpen} toggle={toggle} className="d-inline-block mb-1">
                         <DropdownToggle tag="a" className="text-muted pb-1 d-block" >
                             {t('Available')} <i className="mdi mdi-chevron-down"></i>
@@ -100,12 +98,12 @@ function Settings(props) {
 
                                 <div>
                                     <p className="text-muted mb-1">{t('Name')}</p>
-                                    <h5 className="font-size-14">{t('Patricia Smith')}</h5>
+                                    <h5 className="font-size-14">{t(user.fname + " " + user.lname)}</h5>
                                 </div>
 
                                 <div className="mt-4">
                                     <p className="text-muted mb-1">{t('Email')}</p>
-                                    <h5 className="font-size-14">{t('adc@123.com')}</h5>
+                                    <h5 className="font-size-14">{t(user.username)}</h5>
                                 </div>
 
                                 <div className="mt-4">

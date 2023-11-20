@@ -1,4 +1,3 @@
-const { getUserById } = require('../routes/userRoutes.js');
 const jwt = require('jsonwebtoken');
 const request = require('request-promise');
 const server = require('../server.js');

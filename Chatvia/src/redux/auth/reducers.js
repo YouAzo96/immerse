@@ -7,22 +7,26 @@ import {
   FORGET_PASSWORD,
   FORGET_PASSWORD_SUCCESS,
   API_FAILED,
-  FETCH_USER_PROFILE,
   FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
 } from './constants';
 
-import { getLoggedInUser } from '../../helpers/authUtils';
-import { init } from 'i18next';
-import blankuser from '../../assets/images/users/blankuser.jpeg'
+import { getLoggedInUser, getLoggedInUserInfo } from '../../helpers/authUtils';
 
 const INIT_STATE = {
-  user: getLoggedInUser(),
+  user: {
+    fname: getLoggedInUserInfo()?.fname,
+    lname: getLoggedInUserInfo()?.lname,
+    username: getLoggedInUserInfo()?.username,
+    about: getLoggedInUser()?.about,
+    imageUrl: getLoggedInUser()?.imageUrl,},
   loading: false,
   isUserLogout: false,
   error: null,
 };
+
+console.log("INIT_STATE", INIT_STATE);
 
 const Auth = (state = INIT_STATE, action) => {
   switch (action.type) {
@@ -70,10 +74,9 @@ const Auth = (state = INIT_STATE, action) => {
 
     case FETCH_USER_PROFILE_SUCCESS:
         return { ...state,
-           user: {
-            about: action.payload.about,
-            imageUrl: action.payload.imageUrl,
-            },
+              user: {...INIT_STATE.user,
+                about: action.payload.about,
+                imageUrl: action.payload.imageUrl},
              loading: false, 
              error: null
         };

@@ -1,5 +1,5 @@
 import { all, call, fork, put, takeEvery } from 'redux-saga/effects';
-import { APIClient } from '../../apis/apiClient';
+import { APIClient, setAuthorization } from '../../apis/apiClient';
 import {
   LOGIN_USER,
   LOGOUT_USER,
@@ -7,6 +7,7 @@ import {
   FORGET_PASSWORD,
   CODE_SENT,
   FETCH_USER_PROFILE,
+  API_FAILED,
 } from './constants';
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
 import {
@@ -17,8 +18,9 @@ import {
   logoutUserSuccess,
   codeSentSuccess,
   setUserProfile,
+  logoutUser,
 } from './actions';
-import { setLoggedInUser } from '../../helpers/authUtils';
+import { isUserAuthenticated, setLoggedInUser } from '../../helpers/authUtils';
 
 /**
  * Sets the session
@@ -39,6 +41,7 @@ function* login({ payload: { username, password, history } }) {
       password,
     });
     if (response.status === 200) {
+      setAuthorization(response.token);
       setLoggedInUser(response.token);
       yield put(loginUserSuccess(response.token));
     } else {
@@ -56,9 +59,13 @@ function* login({ payload: { username, password, history } }) {
  */
 function* logout({ payload: { history } }) {
   try {
-    localStorage.removeItem('authUser');
+    console.log('logout saga', history);
     yield put(logoutUserSuccess(true));
-  } catch (error) {}
+    localStorage.removeItem('authUser');
+  } catch (error) {
+    console.log("Error occured in logout:", error);
+    yield put(apiError(error));
+  }
 }
 
 /**
@@ -108,16 +115,27 @@ function* fetchUserProfile() {
       },
     });
 
-    // console.log("saga API response is:", response)
+    console.log("saga API response is:", response)
 
     const user = {
       ...response,
       imageUrl: response.imageUrl ? response.imageUrl : defaultImage,
     }
     yield put(setUserProfile(user));
-  } catch (error) {
-    console.log("saga API error is:", error)
+  }  catch (error) {
+    console.log("Error in fetchUser: ", error)
     yield put(apiError(error));
+  }
+}
+
+// handle Api errors
+function* apiErrorHandler({ payload: error }) {
+  try {
+  if (error && error.status === 405 && !isUserAuthenticated()) {
+    yield put(logoutUser());
+  }
+} catch (error) {
+  console.log("Api Error", error);
   }
 }
 
@@ -142,6 +160,10 @@ export function* watchForgetPassword() {
 export function* watchFetchUserProfile() {
   yield takeEvery(FETCH_USER_PROFILE, fetchUserProfile);
 }
+export function* watchApiError() {
+  yield takeEvery(API_FAILED, apiErrorHandler);
+}
+
 
 function* authSaga() {
   yield all([
@@ -151,6 +173,7 @@ function* authSaga() {
     fork(watchRegisterUser),
     fork(watchForgetPassword),
     fork(watchFetchUserProfile),
+    fork(watchApiError),
   ]);
 }
 
