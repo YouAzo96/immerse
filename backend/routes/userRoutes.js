@@ -7,6 +7,7 @@ const request = require('request-promise');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const { error } = require('console');
 
 // Route for user registration
 router.post('/register', async (req, res) => {
@@ -121,12 +122,10 @@ router.post('/forget-pwd', async (req, res) => {
 // GET a user by email
 
 router.get('/me', async (req, res) => {
-  const isValidUser = await verifiedUser(req);
-  console.log(isValidUser);
-  if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Or Expired Token' });
-  }
   try {
+    const isValidUser = await verifiedUser(req);
+    console.log("isValidUser is:", isValidUser);
+
     const user = await db
       .promise()
       .query('SELECT about,image FROM User WHERE email = ?', [
@@ -157,7 +156,8 @@ router.get('/me', async (req, res) => {
       }
     }
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+    console.log("Error in /me:", error)
+    return res.status(error.status || 500).json({ error: error || 'Internal Server Error' });
   }
 });
 
@@ -207,19 +207,31 @@ router.put('/update', async (req, res) => {
 });
 
 const verifiedUser = async (req) => {
-  const token = req.headers['authorization'].split(' ')[1];
-  const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
-    if (err) {
-      if (err.expiredAt) {
-        console.log("token expired");
-      }
-      console.log("error occured", err);
-      return false;
-    }else{
+  try {
+    const token = req.headers['authorization'].split(' ')[1];
+    const user = await new Promise((resolve, reject) => {
+      jwt.verify(token, 'MyToKeN', (err, decoded) => {
+        console.log("expiredAt:", decoded);
+        if (err) {
+          if (err.expiredAt) {
+            reject('Token expired');
+          } else {
+            console.log("Error occurred:", err.message);
+            reject('Invalid token');
+          }
+        } else {
+          resolve(decoded);
+        }
+      });
+    });
     return user;
+  } catch (error) {
+    if (error === 'Token expired') {
+      throw { status: 405, message: error };
     }
-  });
-  return isValidUser;
+    console.log("Error in verifiedUser:", error);
+    throw { status: 403, message: error };
+  }
 };
 
 const generateVerificationCode = () => {

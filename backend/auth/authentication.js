@@ -57,7 +57,7 @@ app.post('/auth', async (req, res) => {
     },
     secretKey,
     {
-      expiresIn: '1h',
+      expiresIn: '10hr',
     }
   );
 
