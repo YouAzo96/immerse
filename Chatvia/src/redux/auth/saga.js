@@ -38,6 +38,7 @@ function* login({ payload: { username, password, history } }) {
     });
     if (response.status === 200) {
       setLoggedInUser(response.token);
+
       yield put(loginUserSuccess(response.token));
     } else {
       console.log(response.message); //find the element that hold error messages and write to it a significant msg.

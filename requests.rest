@@ -1,3 +1,8 @@
 GET  http://localhost:3001/api/users/me
-Content-Type: application/json
-Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozMCwidXNlcm5hbWUiOiJhZG1pbjFAaW1tZXJzZS5jb20iLCJmbmFtZSI6Ik1pY2hhZWwiLCJsbmFtZSI6ImR1bW15IiwiaWF0IjoxNzAwMDAzMTAwLCJleHAiOjE3MDAwMDY3MDB9.AycbVXtjiF7FpGnkbLiuRzIinMq2gvLjuTsSpjIidbM"
+content-type: application/json
+Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0MCwidXNlcm5hbWUiOiJ5b3Vzc2VmLmF6b3VnYWdoOTZAZ21haWwuY29tIiwiZm5hbWUiOiJZb3Vzc2VmIiwibG5hbWUiOiJBem91Z2FnaCIsImlhdCI6MTcwMDYzOTI3MiwiZXhwIjoxNzAwNjQyODcyfQ.7GfJlpGiAwAQZw9LjJae2DN5Vh3lwh5Lfvyj1mrvDNo"
+//    "email":"youssef.azougagh96@gmail.com",
+ //   "password":"password",
+   // "verifCode":"0f25"
+//}
+ 

@@ -3,32 +3,37 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const errorHandler = require('./errorHandler.js');
+const http = require('http');
+const socketIO = require('socket.io');
+const jwt = require('jsonwebtoken');
+
 const app = express();
 const port = process.env.PORT || 3001;
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+//server to handle sockets
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+  },
+});
 
 // Create a MySQL connection
-const db = mysql.createConnection({
-  // host: 'sql9.freemysqlhosting.net', // Change to database host
-  // user: 'sql9652386',      // Change to database user
-  // password: 'NqHfNyamBY',  // Change to database password
-  // database: 'sql9652386',  // Change to database name
+const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: 'password',
   database: 'immerse',
+  connectionLimit: 10, // Adjust the limit based on your requirements
 });
 // Microservices URLs
 
 const authServiceUrl = 'http://localhost:3002';
-const conversationServiceUrl = 'http://localhost:3003';
-const notificationServiceUrl = 'http://localhost:3004';
 
 module.exports = { db, authServiceUrl };
-app.use(errorHandler);
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
@@ -36,6 +41,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const conversationHasParticipantRoutes = require('./routes/conversationHasParticipantRoutes');
 const userHasContactRoutes = require('./routes/userHasContactRoutes');
+const { log } = require('console');
 
 // Use the routes
 app.use('/api/users', userRoutes);
@@ -43,15 +49,77 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/conversation/participant', conversationHasParticipantRoutes);
 
-// Connect to the MySQL server
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to MySQL:', err);
+app.use(errorHandler);
+
+//handle websockets
+io.on('connection', async (socket) => {
+  const token =
+    socket.handshake.query.userId == 'null'
+      ? null
+      : socket.handshake.query.userId.slice(1, -1);
+  console.log('Backend: ' + token);
+  if (!token) {
     return;
   }
-  console.log('Connected to MySQL database');
-  // db.end();
+  const user = await verifiedUser(token);
+  const user_id = user.user_id;
+  if (user_id) {
+    const socketId = socket.id;
+    const sql = 'update user set socket_id = ? where user_id = ?';
+    db.promise()
+      .execute(sql, [socketId, user_id])
+      .then(() => {
+        console.log(`User connected: ${user_id}, Socket ID: ${socketId}`);
+      })
+      .catch((error) => {
+        console.error('Error storing socket information:', error);
+      });
+  }
+  // Handle signaling events (offer, answer, ice candidates)
+  socket.on('offer', (data) => {
+    io.to(data.to).emit('offer', { from: socket.id, offer: data.offer });
+  });
+
+  socket.on('answer', (data) => {
+    io.to(data.to).emit('answer', { from: socket.id, answer: data.answer });
+  });
+
+  socket.on('ice-candidate', (data) => {
+    console.log('New ICE candidate: ' + data.iceCandidate);
+    io.to(data.to).emit('ice-candidate', {
+      from: socket.id,
+      iceCandidate: data.iceCandidate,
+    });
+  });
+
+  // Handle user disconnect
+  socket.on('disconnect', () => {
+    if (user_id) {
+      const sql = 'update user set socket_id = NULL WHERE user_id = ?';
+      db.promise()
+        .execute(sql, [user_id])
+        .then(() => {
+          console.log(`User disconnected: ${user_id}, Socket ID: ${socket.id}`);
+        })
+        .catch((error) => {
+          console.error('Error removing socket information:', error);
+        });
+    }
+  });
 });
-app.listen(port, () => {
+
+const verifiedUser = async (token) => {
+  const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
+    if (err) {
+      console.log(err);
+      return false;
+    } else {
+      return user;
+    }
+  });
+  return isValidUser;
+};
+// Start listening for incoming connections
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

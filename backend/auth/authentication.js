@@ -4,7 +4,6 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const bc = require('bcrypt');
-const { use } = require('../routes/messageRoutes');
 const app = express();
 const port = 3002;
 
@@ -40,7 +39,6 @@ app.post('/auth', async (req, res) => {
       return res.status(403).json({ error: 'User Not Found!' }); //'User not found!
     }
     user = results[0];
-    console.log(user);
     if (!(await bc.compare(password, user.password))) {
       return res.status(404).json({ error: 'Credentials Missmatch' }); //Credentials Missmatch!
     }

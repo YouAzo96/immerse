@@ -5,8 +5,10 @@ const bc = require('bcrypt');
 const { db } = require('../server.js');
 const request = require('request-promise');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const { log } = require('console');
+const EventEmitter = require('events');
+const emitter = new EventEmitter();
 
 // Route for user registration
 router.post('/register', async (req, res) => {
@@ -30,10 +32,12 @@ router.post('/register', async (req, res) => {
     const values = [password, email, fname, lname];
     //send to DB
     await db.promise().query(sql, values);
+    // Emit a User Registration event
+    emitter.emit('userRegistered', { email: email });
 
     req.body = { username: req.body.email, password: req.body.password };
     //authenticate user after registration
-    authMiddleware(req, res);
+    authMiddleware(req, res); //turn into an api call
   } catch (err) {
     return res.status(500).json({ error: 'User registration failed: ' + err });
   }
@@ -44,15 +48,13 @@ router.post('/login', authMiddleware);
 //Generate verification code for password reset process
 router.post('/code-gen', async (req, res) => {
   try {
+    const email = req.body.username ? req.body.username : req.body.email;
     const [resp, fields] = await db
       .promise()
-      .query('SELECT user_id FROM User WHERE email = ?', [
-        req.body.username ? req.body.username : req.body.email,
-      ]);
+      .query('SELECT user_id FROM User WHERE email = ?', [email]);
     if (!resp[0]) {
       return res.status(403).json({ error: 'User not found' });
     } else {
-      console.log(resp[0].user_id);
       //generate code and store in DB
       const verificationCode = generateVerificationCode();
       await db
@@ -62,15 +64,11 @@ router.post('/code-gen', async (req, res) => {
           resp[0].user_id,
         ]);
       //Send Email to user with value of: verificationCode
-      const mailOptions = {
-        from: 'your_email@gmail.com',
-        to: req.body.email,
-        subject: 'Password Reset Verification Code',
-        text: `Your verification code is: ${verificationCode}`,
-      };
-
-      //await transporter.sendMail(mailOptions); //send email.
-
+      await emitter.emit('verificationCode', {
+        email: email,
+        verificationCode: verificationCode,
+      });
+      deleteGeneratedCode(resp[0].user_id);
       return res.status(200).json({
         success: 'Code Sent (valid for 15 min), Please Check Your Email',
       });
@@ -88,7 +86,6 @@ router.post('/forget-pwd', async (req, res) => {
     const [dbresp, fields] = await db
       .promise()
       .query('SELECT user_id,verif_code FROM User WHERE email = ?', [username]);
-    console.log();
     if (!dbresp[0]) {
       return res.status(403).json({ error: 'User Not Found!' });
     } else if (dbresp[0].verif_code === null) {
@@ -106,6 +103,9 @@ router.post('/forget-pwd', async (req, res) => {
             newpassword,
             dbresp[0].user_id,
           ]);
+        emitter.emit('passwordChanged', {
+          email: username,
+        });
         return res
           .status(200)
           .json({ success: 'Password Changed Successfully!' });
@@ -122,7 +122,6 @@ router.post('/forget-pwd', async (req, res) => {
 
 router.get('/me', async (req, res) => {
   const isValidUser = await verifiedUser(req);
-  console.log(isValidUser);
   if (!isValidUser) {
     return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
@@ -188,15 +187,12 @@ router.put('/update', async (req, res) => {
 });
 
 const verifiedUser = async (req) => {
-  const token = req.headers['authorization'].split(' ')[1].slice(0, -1);
-  const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
+  const token = req.headers['authorization'].split(' ')[1].replace(/"/g, '');
+  console.log(token);
+
+  const isValidUser = await jwt.verify(token, 'MyToKeN', (err, user) => {
     if (err) {
       return false;
-    }
-    const isTokenExpired = Date.now() >= user.exp * 1000;
-
-    if (isTokenExpired) {
-      return false; //expired token
     } else {
       return user;
     }
@@ -208,5 +204,90 @@ const generateVerificationCode = () => {
   const code = crypto.randomBytes(2).toString('hex'); // Generate a 4-digit code
   return code;
 };
+//Events handlers for notifications api
+let notificationServiceEndPoint = {
+  url: 'http://localhost:3003/notify',
+  method: 'POST',
+};
+
+emitter.on('contactAdded', async (eventData) => {
+  console.log('Event triggered');
+  notificationServiceEndPoint.json = eventData;
+  notificationServiceEndPoint.json.eventType = 'contactAdded';
+  console.log(notificationServiceEndPoint);
+
+  await request(notificationServiceEndPoint)
+    .then((response) => {
+      console.log('Event sent successfully:', response);
+    })
+    .catch((error) => {
+      console.error('Error sending event:', error);
+    });
+  delete notificationServiceEndPoint.json; //reset endpoint
+});
+
+emitter.on('verificationCode', (eventData) => {
+  notificationServiceEndPoint.json = eventData;
+  notificationServiceEndPoint.json.eventType = 'verificationCode';
+  request(notificationServiceEndPoint, (error, response, body) => {
+    if (error) {
+      console.error('Error sending event:', error.message);
+    } else {
+      console.log('Event sent successfully:', response);
+    }
+  });
+  delete notificationServiceEndPoint.json;
+});
+
+emitter.on('userRegistered', (eventData) => {
+  notificationServiceEndPoint.json = eventData;
+  notificationServiceEndPoint.json.eventType = 'userRegistered'; //modify
+  request(notificationServiceEndPoint, (error, response, body) => {
+    if (error) {
+      console.error('Error sending event:', error.message);
+    } else {
+      console.log('Event sent successfully:', response);
+    }
+  });
+  delete notificationServiceEndPoint.json;
+});
+
+emitter.on('passwordChanged', (eventData) => {
+  notificationServiceEndPoint.json = eventData;
+  notificationServiceEndPoint.json.eventType = 'passwordChanged'; //modify
+  request(notificationServiceEndPoint, (error, response, body) => {
+    if (error) {
+      console.error('Error sending event:', error.message);
+    } else {
+      console.log('passwordChanged event sent successfully:', response);
+    }
+  });
+  delete notificationServiceEndPoint.json;
+});
+/*Template
+emitter.on('eventname', (eventData) => {
+  notificationServiceEndPoint.json = eventData;
+  notificationServiceEndPoint.json.eventType = 'eventname'; //modify
+  request(notificationServiceEndPoint, (error, response, body) => {
+    if (error) {
+      console.error('Error sending event:', error.message);
+    } else {
+      console.log('Event sent successfully:', response);
+    }
+  });
+  delete notificationServiceEndPoint.json;
+});
+*/
+async function deleteGeneratedCode(user_id) {
+  const delay = new Promise((resolve) => setTimeout(resolve, 600000));
+  await delay;
+  try {
+    await db
+      .promise()
+      .query('update user set verif_code = NULL where user_id = ?', [user_id]);
+  } catch (error) {
+    console.log('Internal Server Error: ' + error);
+  }
+}
 
 module.exports = router;

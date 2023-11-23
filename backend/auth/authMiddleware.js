@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const request = require('request-promise');
-const server = require('../server.js');
-const authServiceUrl = server.authServiceUrl;
+const authServiceUrl = 'http://localhost:3002';
 
 //verification of tokens
 async function authenticateToken(req, res) {
