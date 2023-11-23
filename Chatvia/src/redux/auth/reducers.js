@@ -22,6 +22,7 @@ const INIT_STATE = {
   loading: false,
   isUserLogout: false,
   error: null,
+  success: false,
 };
 
 const Auth = (state = INIT_STATE, action) => {
@@ -34,7 +35,7 @@ const Auth = (state = INIT_STATE, action) => {
     case REGISTER_USER:
       return { ...state, loading: true };
     case REGISTER_USER_SUCCESS:
-      return { ...state, user: action.payload, loading: false, error: null };
+      return { ...state, user: action.payload, loading: false, error: null, success: true };
 
     case LOGOUT_USER_SUCCESS:
       return { ...state, user: null, isUserLogout: true };
