@@ -1,5 +1,7 @@
 import axios from 'axios';
 import config from '../config';
+import { isUserAuthenticated } from '../helpers/authUtils';
+
 
 // default
 axios.defaults.baseURL = config.API_URL;
@@ -16,6 +18,15 @@ axios.interceptors.response.use(
     //****We access the error data through: error.response.data._propertyname***
     return Promise.reject(error.response.data.error);
   }
+);
+
+// intercepting to verify token
+axios.interceptors.request.use(
+ (config) => {
+  isUserAuthenticated();
+  return config;
+},
+(error) => Promise.reject(error)
 );
 
 /**

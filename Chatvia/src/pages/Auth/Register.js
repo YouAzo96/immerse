@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import withRouter from '../../components/withRouter';
@@ -31,7 +31,6 @@ import { useTranslation } from 'react-i18next';
 import logodark from '../../assets/images/logo-dark.png';
 import logolight from '../../assets/images/logo-light.png';
 import { createSelector } from 'reselect';
-import { setLoggedInUser } from '../../helpers/authUtils';
 
 /**
  * Register component
@@ -76,11 +75,11 @@ const Register = (props) => {
   const { user, error, success } = useSelector(selectAccount);
 
   useEffect(() => {
-    if (user) {
-      setLoggedInUser(user);
-      navigate('/login');
+    console.log('success is:', success);
+    if (success) {
+        setTimeout(() => navigate("/login"), 3000);
     }
-  }, [dispatch, success, error, user, navigate]);
+}, [dispatch, success, error, user, navigate]);
 
   useEffect(() => {
     dispatch(apiError(''));
@@ -127,8 +126,7 @@ const Register = (props) => {
                   >
                     {user && user ? (
                       <Alert color="success">
-                        Register User Successfully, Please Login{' '}
-                        <a href="/login">Here.</a>
+                        Register User Successfully
                       </Alert>
                     ) : null}
 
@@ -177,7 +175,7 @@ const Register = (props) => {
                           id="fname"
                           name="fname"
                           className="form-control form-control-lg bg-soft-light border-light"
-                          placeholder="Enter fname"
+                          placeholder="Enter first name"
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           value={formik.values.fname}
@@ -206,7 +204,7 @@ const Register = (props) => {
                           id="lname"
                           name="lname"
                           className="form-control form-control-lg bg-soft-light border-light"
-                          placeholder="Enter lname"
+                          placeholder="Enter last name"
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
                           value={formik.values.lname}

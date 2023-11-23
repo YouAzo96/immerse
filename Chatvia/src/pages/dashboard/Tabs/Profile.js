@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from "react";
 import {
   Dropdown,
   DropdownMenu,
@@ -11,14 +11,12 @@ import {
 import CustomCollapse from '../../../components/CustomCollapse';
 import AttachedFiles from '../../../components/AttachedFiles';
 
-//Import Images
-import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 
 //i18n
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 function Profile(props) {
-  const [user] = useState(null);
+  const user = props.user;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isOpen1, setIsOpen1] = useState(true);
@@ -45,11 +43,6 @@ function Profile(props) {
 
   const toggle = () => setDropdownOpen(!dropdownOpen);
 
-  useEffect(() => {}, []);
-
-  if (!user) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <React.Fragment>
@@ -77,13 +70,15 @@ function Profile(props) {
         <div className="text-center p-4 border-bottom">
           <div className="mb-4">
             <img
-              src={avatar1}
+              src={user?.image}
               className="rounded-circle avatar-lg img-thumbnail"
               alt="chatvia"
             />
           </div>
 
-          <h5 className="font-size-16 mb-1 text-truncate">{t(user.name)}</h5>
+          <h5 className="font-size-16 mb-1 text-truncate">
+            {t((user.fname + " " + user.lname) || "User")}
+          </h5>
           <p className="text-muted text-truncate mb-1">
             <i className="ri-record-circle-fill font-size-10 text-success me-1 d-inline-block"></i>{' '}
             {t('Active')}
@@ -96,7 +91,7 @@ function Profile(props) {
           <div className="text-muted">
             <p className="mb-4">
               {t(
-                'If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.'
+                user?.about
               )}
             </p>
           </div>
@@ -111,40 +106,31 @@ function Profile(props) {
                 toggleCollapse={toggleCollapse1}
               >
                 <div>
-                  <p className="text-muted mb-1">{t('Name')}</p>
-                  <h5 className="font-size-14">{t('Patricia Smith')}</h5>
+                  <p className="text-muted mb-1">{t("Name")}</p>
+                  <h5 className="font-size-14">{t(user.fname + " " + user.lname)}</h5>
                 </div>
 
                 <div className="mt-4">
-                  <p className="text-muted mb-1">{t('Email')}</p>
-                  <h5 className="font-size-14">{t('adc@123.com')}</h5>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-muted mb-1">{t('Time')}</p>
-                  <h5 className="font-size-14">{t('11:40 AM')}</h5>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-muted mb-1">{t('Location')}</p>
-                  <h5 className="font-size-14 mb-0">{t('California, USA')}</h5>
+                  <p className="text-muted mb-1">{t("Email")}</p>
+                  <h5 className="font-size-14">{t(user.email)}</h5>
                 </div>
               </CustomCollapse>
             </Card>
             {/* End About card  */}
 
-            <Card className="mb-1 shadow-none border">
+              {/* ATTACHED FILES COLLAPSE TAB, might reuse for something else. */}
+            {/* <Card className="mb-1 shadow-none border"> */}
               {/* import collaps */}
-              <CustomCollapse
-                title="Attached Files"
-                iconClass="ri-attachment-line"
-                isOpen={isOpen2}
-                toggleCollapse={toggleCollapse2}
-              >
+              {/* <CustomCollapse */}
+                {/* title="Attached Files" */}
+                {/* iconClass="ri-attachment-line" */}
+                {/* isOpen={isOpen2} */}
+                {/* toggleCollapse={toggleCollapse2} */}
+              {/* > */}
                 {/* attached files */}
-                <AttachedFiles files={files} />
-              </CustomCollapse>
-            </Card>
+                {/* <AttachedFiles files={files} /> */}
+              {/* </CustomCollapse>  */}
+            {/* </Card> */}
             {/* End Attached Files card  */}
           </div>
           {/* end profile-user-accordion  */}

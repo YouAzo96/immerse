@@ -7,18 +7,22 @@ import {
   FORGET_PASSWORD,
   FORGET_PASSWORD_SUCCESS,
   API_FAILED,
+  FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
+  FETCH_USER_CONTACTS,
+  FETCH_USER_CONTACTS_SUCCESS,
+  FETCH_USER_PROFILE,
 } from './constants';
 
-import { getLoggedInUser } from '../../helpers/authUtils';
-import { init } from 'i18next';
-
 const INIT_STATE = {
-  user: getLoggedInUser(),
+  user: null,
+  contacts: null,
+  contactsLoading: false,
   loading: false,
   isUserLogout: false,
   error: null,
+  success: false,
 };
 
 const Auth = (state = INIT_STATE, action) => {
@@ -31,7 +35,7 @@ const Auth = (state = INIT_STATE, action) => {
     case REGISTER_USER:
       return { ...state, loading: true };
     case REGISTER_USER_SUCCESS:
-      return { ...state, user: action.payload, loading: false, error: null };
+      return { ...state, user: action.payload, loading: false, error: null, success: true };
 
     case LOGOUT_USER_SUCCESS:
       return { ...state, user: null, isUserLogout: true };
@@ -65,9 +69,40 @@ const Auth = (state = INIT_STATE, action) => {
         isUserLogout: false,
       };
 
-    default:
-      return { ...state };
-  }
-};
+    case FETCH_USER_PROFILE:
+      return { ...state, loading: true };
+
+    case FETCH_USER_PROFILE_SUCCESS:
+        return { ...state,
+              user: {
+                fname: action.payload.fname,
+                lname: action.payload.lname,
+                email: action.payload.email,
+                about: action.payload.about,
+                image: action.payload.image
+              },
+             loading: false, 
+             error: null
+        };
+
+    case FETCH_USER_CONTACTS:
+      return { ...state, contactsLoading: true };    
+
+    case FETCH_USER_CONTACTS_SUCCESS:
+      return { ...state, contacts: action.payload.map(contact => ({
+        group: contact.fname[0].toUpperCase(),
+        children: {
+        name: contact.fname + " " + contact.lname,
+        email: contact.email,
+        about: contact.about,
+        image: contact.image,
+        }})),
+      contactsLoading: false,
+      error: null 
+      };
+
+    default: return { ...state };
+    }
+}
 
 export default Auth;

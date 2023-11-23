@@ -18,48 +18,81 @@ class Contacts extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            searchTerm: "",
             modal: false,
-            contacts: this.props.contacts
+            contacts: this.props.contactList || []
         }
         this.toggle = this.toggle.bind(this);
         this.sortContact = this.sortContact.bind(this);
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps !== this.props) {
-            this.setState({
-                contacts: this.props.contacts
-            });
+        if (this.props.contacts !== prevProps.contacts && this.props.contacts) {
+          this.setState({ contacts: this.props.contacts });
         }
-    }
+      }
 
     toggle() {
         this.setState({ modal: !this.state.modal });
     }
+    
+    handleInputChange = (event) => {
+        this.setState({ searchTerm: event.target.value });
+    }
 
     sortContact() {
-        let data = this.state.contacts.reduce((r, e) => {
-            try {
-                // get first letter of name of current element
-                let group = e.name[0];
-                // if there is no property in accumulator with this letter create it
-                if (!r[group]) r[group] = { group, children: [e] }
-                // if there is push current element to children array for that letter
-                else r[group].children.push(e);
-            } catch (error) {
-                return sortedContacts;
-            }
-            // return accumulator
-            return r;
-        }, {})
-
-        // since data at this point is an object, to get array of values
-        // we use Object.values method
-        let result = Object.values(data);
-        this.setState({ contacts: result });
-        sortedContacts = result;
-        return result;
-    }
+        const { contacts } = this.state;
+      
+        let data = contacts.reduce((r, contact) => {
+          try {
+            // get first letter of name of current element
+            let group = contact.group;
+            // if there is no property in accumulator with this letter create it
+            if (!r[group]) r[group] = { group, children: [contact.children] };
+            // if there is push current element to children array for that letter
+            else r[group].children.push(contact.children);
+          } catch (error) {
+            console.log("error in sortContact is:", error);
+          }
+          return r;
+        }, {});
+      
+        let sortedData = Object.values(data).sort((a, b) =>
+          a.group.localeCompare(b.group)
+        );
+      
+        sortedData.forEach((element) => {
+          element.children.sort((a, b) => a.name.localeCompare(b.name));
+        });
+      
+        this.setState({ contacts: sortedData });
+        sortedContacts = sortedData;
+        return sortedData;
+      }
+    
+    filterContacts = () => {
+        const { contacts, searchTerm } = this.state;
+        console.log("contacts in filterContacts are:", contacts);
+        if (!searchTerm) {
+          return contacts; // No search term, return all contacts
+        }
+      
+        const filteredContacts = contacts
+          .filter((group) =>
+            group.children.some(
+              (contact) =>
+                contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          )
+          .map((group) => ({
+            ...group,
+            children: group.children.filter((contact) =>
+              contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+            ),
+          }));
+      
+        return filteredContacts;
+      };
 
     componentDidMount() {
         this.sortContact();
@@ -70,6 +103,7 @@ class Contacts extends Component {
     }
 
     render() {
+        const filteredContacts = this.filterContacts();
         const { t } = this.props;
         return (
             <React.Fragment>
@@ -117,7 +151,12 @@ class Contacts extends Component {
                                 <Button color="link" className="text-decoration-none text-muted pr-1" type="button">
                                     <i className="ri-search-line search-icon font-size-18"></i>
                                 </Button>
-                                <Input type="text" className="form-control bg-light " placeholder={t('Search users..')} />
+                                <Input 
+                                type="text" 
+                                className="form-control bg-light " 
+                                placeholder={t('Search users..')}
+                                value={this.state.searchTerm}
+                                onChange={this.handleInputChange} />
                             </InputGroup>
                         </div>
                         {/* End search-box */}
@@ -126,42 +165,39 @@ class Contacts extends Component {
 
                     {/* Start contact lists */}
                     <SimpleBar style={{ maxHeight: "100%" }} id="chat-room" className="p-4 chat-message-list chat-group-list">
+                    {filteredContacts.map((contactGroup, key) => (
+  <div key={key} className={key + 1 === 1 ? "" : "mt-3"}>
+    <div className="p-3 fw-bold text-primary">{contactGroup.group}</div>
+    <ul className="list-unstyled contact-list">
+      {console.log("contactGroup.children in Contacts.js is:", contactGroup.children)}
 
-                        {
-                            sortedContacts.map((contact, key) =>
-                                <div key={key} className={key + 1 === 1 ? "" : "mt-3"}>
-                                    <div className="p-3 fw-bold text-primary">
-                                        {contact.group}
-                                    </div>
-
-                                    <ul className="list-unstyled contact-list">
-                                        {
-                                            contact.children.map((child, key) =>
-                                                <li key={key} >
-                                                    <div className="d-flex align-items-center">
-                                                        <div className="flex-grow-1">
-                                                            <h5 className="font-size-14 m-0">{child.name}</h5>
-                                                        </div>
-                                                        <UncontrolledDropdown>
-                                                            <DropdownToggle tag="a" className="text-muted">
-                                                                <i className="ri-more-2-fill"></i>
-                                                            </DropdownToggle>
-                                                            <DropdownMenu className="dropdown-menu-end">
-                                                                <DropdownItem>{t('Share')} <i className="ri-share-line float-end text-muted"></i></DropdownItem>
-                                                                <DropdownItem>{t('Block')} <i className="ri-forbid-line float-end text-muted"></i></DropdownItem>
-                                                                <DropdownItem>{t('Remove')} <i className="ri-delete-bin-line float-end text-muted"></i></DropdownItem>
-                                                            </DropdownMenu>
-                                                        </UncontrolledDropdown>
-                                                    </div>
-                                                </li>
-                                            )
-                                        }
-                                    </ul>
-                                </div>
-                            )
-                        }
-
-                    </SimpleBar>
+      {Array.isArray(contactGroup.children) ? (
+        // If contactGroup.children is an array, map over it
+        contactGroup.children.map((contact, childKey) => (
+          <li key={childKey}>
+            <div className="d-flex align-items-center">
+              <div className="flex-grow-1">
+                <h5 className="font-size-14 m-0">{contact.name}</h5>
+              </div>
+              {/* ... (dropdown and other actions) */}
+            </div>
+          </li>
+        ))
+      ) : (
+        // If contactGroup.children is not an array, render a single item
+        <li>
+          <div className="d-flex align-items-center">
+            <div className="flex-grow-1">
+              <h5 className="font-size-14 m-0">{contactGroup.children.name}</h5>
+            </div>
+            {/* ... (dropdown and other actions) */}
+          </div>
+        </li>
+      )}
+    </ul>
+  </div>
+))}
+                            </SimpleBar>
                     {/* end contact lists */}
                 </div>
             </React.Fragment>

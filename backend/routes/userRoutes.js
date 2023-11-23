@@ -6,7 +6,12 @@ const { db } = require('../server.js');
 const request = require('request-promise');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { error } = require('console');
 const { log } = require('console');
+
+// Secret key for JWT token
+const secretKey = 'MyToKeN';
+
 const EventEmitter = require('events');
 const emitter = new EventEmitter();
 
@@ -35,7 +40,7 @@ router.post('/register', async (req, res) => {
     // Emit a User Registration event
     emitter.emit('userRegistered', { email: email });
 
-    req.body = { username: req.body.email, password: req.body.password };
+    req.body = { email: req.body.email, password: req.body.password };
     //authenticate user after registration
     authMiddleware(req, res); //turn into an api call
   } catch (err) {
@@ -45,6 +50,7 @@ router.post('/register', async (req, res) => {
 
 // Route for user login
 router.post('/login', authMiddleware);
+
 //Generate verification code for password reset process
 router.post('/code-gen', async (req, res) => {
   try {
@@ -80,7 +86,7 @@ router.post('/code-gen', async (req, res) => {
 
 //Forget password
 router.post('/forget-pwd', async (req, res) => {
-  const username = req.body.username ? req.body.username : req.body.email;
+  const email = req.body.email ? req.body.email : req.body.email;
   const { password, verifCode } = req.body;
   try {
     const [dbresp, fields] = await db
@@ -126,18 +132,43 @@ router.get('/me', async (req, res) => {
     return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
   try {
+    const isValidUser = await verifiedUser(req);
+
     const user = await db
       .promise()
       .query('SELECT about,image FROM User WHERE email = ?', [
-        isValidUser.username,
+        isValidUser.email,
       ]);
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     } else {
-      return res.status(200).json(user[0]);
+      try {
+        if (!user[0][0].image) {
+          return res.status(200).json({ about: user[0][0].about, image: null });
+        }
+        const imageBuffer = user[0][0].image;
+        if (!Buffer.isBuffer(imageBuffer)) {
+          return res.status(500).json({ error: 'Invalid image format' });
+        }
+        const base64Image = Buffer.from(imageBuffer).toString('base64');
+        const image = `data:image;base64,${base64Image}`;
+        const userData = {
+          about: user[0][0].about,
+          image: image,
+        };
+
+        return res.status(200).json(userData);
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ error: 'Internal Server Error: ' + error });
+      }
     }
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+    console.log('Error in /me:', error);
+    return res
+      .status(error.status || 500)
+      .json({ error: error || 'Internal Server Error' });
   }
 });
 
@@ -148,12 +179,18 @@ router.get('/contacts', async (req, res) => {
     return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
   try {
-    const [results, flds] = await db.promise().query(
-      'SELECT u.user_id,u.fname,u.lname,u.email FROM user u \
-        JOIN userhascontact uc ON u.user_id = uc.contact_id \
-        WHERE uc.user_id = ?;',
-      [isValidUser.user_id]
-    );
+    const sql = `
+      SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
+      JOIN userhascontact uc ON u.user_id = uc.contact_id
+      WHERE uc.user_id = ?
+      UNION
+      SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
+      JOIN userhascontact uc ON u.user_id = uc.user_id
+      WHERE uc.contact_id = ?
+    `;
+    const [results] = await db
+      .promise()
+      .query(sql, [isValidUser.user_id, isValidUser.user_id]);
     return res.status(200).json(results);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error: ' + error });
@@ -167,29 +204,60 @@ router.put('/update', async (req, res) => {
     return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
 
-  const { image, status } = req.body;
   try {
-    let sql = '';
-    let props = [];
-    if (image) {
-      sql = 'UPDATE User SET image = ? WHERE user_id = ?';
-      props = [image, isValidUser.user_id];
-    } else if (status) {
-      sql = 'UPDATE User SET status = ?,  WHERE user_id = ?';
-      props = [status, isValidUser.user_id];
-    }
-    await db.promise().query(sql, props);
+    const updates = [];
+    const values = [];
 
-    return res.status(200).json({ message: 'User updated successfully' });
+    for (let key in req.body) {
+      if (key === 'image') {
+        updates.push(`${key} = ?`);
+        values.push(Buffer.from(req.body[key], 'base64'));
+      } else if (typeof req.body[key] === 'string') {
+        updates.push(`${key} = ?`);
+        values.push(req.body[key]);
+      } else {
+        for (let subKey in req.body[key]) {
+          updates.push(`${key}.${subKey} = ?`);
+          values.push(req.body[key][subKey]);
+        }
+      }
+    }
+
+    values.push(isValidUser.user_id);
+
+    const sql = `UPDATE User SET ${updates.join(', ')} WHERE user_id = ?`;
+
+    await db.promise().query(sql, values);
+
+    const [rows] = await db
+      .promise()
+      .query('SELECT * FROM User WHERE user_id = ?', [isValidUser.user_id]);
+    const updatedUser = rows[0];
+
+    const newToken = jwt.sign(
+      {
+        user_id: updatedUser.user_id,
+        fname: updatedUser.fname,
+        lname: updatedUser.lname,
+        email: updatedUser.email,
+      },
+      secretKey,
+      {
+        expiresIn: '10hr',
+      }
+    );
+
+    return res
+      .status(200)
+      .json({ message: 'User updated successfully', token: newToken });
   } catch (error) {
+    console.log('Error in /update:', error);
     return res.status(500).json({ error: 'Internal Server Error: ' + error });
   }
 });
 
 const verifiedUser = async (req) => {
   const token = req.headers['authorization'].split(' ')[1].replace(/"/g, '');
-  console.log(token);
-
   const isValidUser = await jwt.verify(token, 'MyToKeN', (err, user) => {
     if (err) {
       return false;
@@ -197,7 +265,6 @@ const verifiedUser = async (req) => {
       return user;
     }
   });
-  return isValidUser;
 };
 
 const generateVerificationCode = () => {

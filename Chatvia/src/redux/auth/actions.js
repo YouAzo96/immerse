@@ -8,13 +8,18 @@ import {
   FORGET_PASSWORD,
   FORGET_PASSWORD_SUCCESS,
   API_FAILED,
+  FETCH_USER_PROFILE,
+  FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
+  UPDATE_USER_PROFILE,
+  FETCH_USER_CONTACTS,
+  FETCH_USER_CONTACTS_SUCCESS,
 } from './constants';
 
-export const loginUser = (username, password, history) => ({
+export const loginUser = (email, password, history) => ({
   type: LOGIN_USER,
-  payload: { username, password, history },
+  payload: { email, password, history },
 });
 
 export const loginUserSuccess = (user) => ({
@@ -65,4 +70,29 @@ export const codeSentSuccess = (passwordResetStatus) => ({
 export const apiError = (error) => ({
   type: API_FAILED,
   payload: error,
+});
+
+export const fetchUserProfile = () => ({
+  type: FETCH_USER_PROFILE,
+  payload: {},
+});
+
+export const setUserProfile = (user) => ({
+  type: FETCH_USER_PROFILE_SUCCESS,
+  payload: user,
+});
+
+export const updateUserProfile = (user) => ({
+  type: UPDATE_USER_PROFILE,
+  payload: user,
+});
+
+export const fetchUserContacts = () => ({
+  type: FETCH_USER_CONTACTS,
+  payload: {},
+});
+
+export const setUserContacts = (contacts) => ({
+  type: FETCH_USER_CONTACTS_SUCCESS,
+  payload: contacts,
 });

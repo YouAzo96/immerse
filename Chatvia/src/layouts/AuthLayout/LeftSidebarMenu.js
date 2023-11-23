@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { Nav, NavItem, NavLink, UncontrolledTooltip, Dropdown, DropdownItem, DropdownToggle, DropdownMenu } from "reactstrap";
 import classnames from "classnames";
 import { connect, useDispatch, useSelector } from "react-redux";
 
-import { setActiveTab, changeLayoutMode } from "../../redux/actions";
+import { setActiveTab, changeLayoutMode, fetchUserProfile } from "../../redux/actions";
 
 //Import Images
 import logo from "../../assets/images/logo.svg"
-import avatar1 from "../../assets/images/users/avatar-1.jpg";
 
 //i18n
 import i18n from '../../i18n';
@@ -23,6 +22,9 @@ import { createSelector } from 'reselect';
 
 function LeftSidebarMenu(props) {
     const dispatch = useDispatch();
+    const reduxUser = useSelector(state => state.Auth.user);
+    const loading = useSelector(state => state.Auth.loading);
+    const effectHasRun = useRef(false);
 
     const selectLayoutProperties = createSelector(
         (state) => state.Layout,
@@ -78,7 +80,19 @@ function LeftSidebarMenu(props) {
             setlng("English");
     }
 
+    useEffect(() => {
+        if (!effectHasRun.current) {
+          dispatch(fetchUserProfile());
+          effectHasRun.current = true;
+        }
+      }, [dispatch]);
+
+      if (loading || reduxUser === null) {
+        return <div>Loading...</div>;
+      }
+
     return (
+        // console.log("user in leftsidebar is:", reduxUser),
         <React.Fragment>
             <div className="side-menu flex-lg-column me-lg-1">
                 {/* LOGO */}
@@ -142,7 +156,7 @@ function LeftSidebarMenu(props) {
                         </UncontrolledTooltip>
                         <Dropdown nav isOpen={dropdownOpenMobile} toggle={toggleMobile} className="profile-user-dropdown d-inline-block d-lg-none dropup">
                             <DropdownToggle nav>
-                                <img src={avatar1} alt="chatvia" className="profile-user rounded-circle" />
+                                <img src={reduxUser.image} alt="chatvia" className="profile-user rounded-circle" />
                             </DropdownToggle>
                             <DropdownMenu className="dropdown-menu-end">
                                 <DropdownItem onClick={() => { toggleTab('profile'); }}>Profile <i className="ri-profile-line float-end text-muted"></i></DropdownItem>
@@ -193,7 +207,7 @@ function LeftSidebarMenu(props) {
                         </li>
                         <Dropdown nav isOpen={dropdownOpen} className="nav-item btn-group dropup profile-user-dropdown" toggle={toggle}>
                             <DropdownToggle className="nav-link mb-2" tag="a">
-                                <img src={avatar1} alt="" className="profile-user rounded-circle" />
+                                <img src={reduxUser.image} alt="" className="profile-user rounded-circle" />
                             </DropdownToggle>
                             <DropdownMenu>
                                 <DropdownItem onClick={() => { toggleTab('profile'); }}>Profile <i className="ri-profile-line float-end text-muted"></i></DropdownItem>

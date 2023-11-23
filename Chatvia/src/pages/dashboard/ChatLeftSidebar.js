@@ -1,5 +1,5 @@
-import React from 'react';
-import { connect } from "react-redux";
+import React, { useEffect } from 'react';
+import { connect, useDispatch } from "react-redux";
 
 import { TabContent, TabPane } from "reactstrap";
 
@@ -9,52 +9,66 @@ import Chats from "./Tabs/Chats";
 import Groups from "./Tabs/Groups";
 import Contacts from "./Tabs/Contacts";
 import Settings from "./Tabs/Settings";
+import { fetchUserProfile, fetchUserContacts } from '../../redux/actions';
+import { useSelector } from 'react-redux';
 
 function ChatLeftSidebar(props) {
-
+    const dispatch = useDispatch();
     const activeTab = props.activeTab;
-
+    const reduxUser = useSelector(state => state.Auth.user);
+    const loading = useSelector(state => state.Auth.loading && state.Auth.contactsLoading);
+    const reduxContacts = useSelector(state => state.Auth.contacts);
+  
+    useEffect(() => {
+      dispatch(fetchUserProfile());
+      dispatch(fetchUserContacts());
+    }, [dispatch]);
+  
+    if (loading || !reduxUser || !reduxContacts) {
+      return <div>...</div>;
+    }
+    
+    console.log("reduxContacts in ChatLeftSidebar are:", reduxContacts);
     return (
         <React.Fragment>
             <div className="chat-leftsidebar me-lg-1">
+                    <TabContent activeTab={activeTab}  >
+                        {/* Start Profile tab-pane */}
+                        <TabPane tabId="profile" id="pills-user"   >
+                            {/* profile content  */}
+                            <Profile user ={reduxUser}/>
+                        </TabPane>
+                        {/* End Profile tab-pane  */}
 
-                <TabContent activeTab={activeTab}  >
-                    {/* Start Profile tab-pane */}
-                    <TabPane tabId="profile" id="pills-user"   >
-                        {/* profile content  */}
-                        <Profile />
-                    </TabPane>
-                    {/* End Profile tab-pane  */}
+                        {/* Start chats tab-pane  */}
+                        <TabPane tabId="chat" id="pills-chat">
+                            {/* chats content */}
+                            <Chats recentChatList={props.recentChatList} />
+                        </TabPane>
+                        {/* End chats tab-pane */}
 
-                    {/* Start chats tab-pane  */}
-                    <TabPane tabId="chat" id="pills-chat">
-                        {/* chats content */}
-                        <Chats recentChatList={props.recentChatList} />
-                    </TabPane>
-                    {/* End chats tab-pane */}
+                        {/* Start groups tab-pane */}
+                        <TabPane tabId="group" id="pills-groups">
+                            {/* Groups content */}
+                            <Groups />
+                        </TabPane>
+                        {/* End groups tab-pane */}
 
-                    {/* Start groups tab-pane */}
-                    <TabPane tabId="group" id="pills-groups">
-                        {/* Groups content */}
-                        <Groups />
-                    </TabPane>
-                    {/* End groups tab-pane */}
+                        {/* Start contacts tab-pane */}
+                        <TabPane tabId="contacts" id="pills-contacts">
+                            {/* Contact content */}
+                            <Contacts contactList={reduxContacts} />
+                        </TabPane>
+                        {/* End contacts tab-pane */}
 
-                    {/* Start contacts tab-pane */}
-                    <TabPane tabId="contacts" id="pills-contacts">
-                        {/* Contact content */}
-                        <Contacts />
-                    </TabPane>
-                    {/* End contacts tab-pane */}
-
-                    {/* Start settings tab-pane */}
-                    <TabPane tabId="settings" id="pills-setting">
-                        {/* Settings content */}
-                        <Settings />
-                    </TabPane>
-                    {/* End settings tab-pane */}
-                </TabContent>
-                {/* end tab content */}
+                        {/* Start settings tab-pane */}
+                        <TabPane tabId="settings" id="pills-setting">
+                            {/* Settings content */}
+                            <Settings user = {reduxUser} />
+                        </TabPane>
+                        {/* End settings tab-pane */}
+                    </TabContent>
+                    {/* end tab content */}
 
             </div>
         </React.Fragment>

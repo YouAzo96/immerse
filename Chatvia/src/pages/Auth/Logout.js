@@ -28,7 +28,7 @@ const Logout = (props) => {
   const isUserLogout = useSelector(layoutdata);
 
   useEffect(() => {
-    dispatch(logoutUser(props.router.navigate));
+    dispatch(logoutUser());
   }, [dispatch, props.router.navigate]);
 
   if (isUserLogout) {
