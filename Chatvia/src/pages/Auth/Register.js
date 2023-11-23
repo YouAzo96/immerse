@@ -31,7 +31,6 @@ import { useTranslation } from 'react-i18next';
 import logodark from '../../assets/images/logo-dark.png';
 import logolight from '../../assets/images/logo-light.png';
 import { createSelector } from 'reselect';
-import { setLoggedInUser } from '../../helpers/authUtils';
 
 /**
  * Register component

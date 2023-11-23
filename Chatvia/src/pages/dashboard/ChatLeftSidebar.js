@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { connect, useDispatch } from "react-redux";
 
 import { TabContent, TabPane } from "reactstrap";
@@ -28,7 +28,7 @@ function ChatLeftSidebar(props) {
       return <div>...</div>;
     }
     
-    // console.log("reduxContacts in ChatLeftSidebar are:", reduxContacts);
+    console.log("reduxContacts in ChatLeftSidebar are:", reduxContacts);
     return (
         <React.Fragment>
             <div className="chat-leftsidebar me-lg-1">

@@ -89,7 +89,16 @@ const Auth = (state = INIT_STATE, action) => {
       return { ...state, contactsLoading: true };    
 
     case FETCH_USER_CONTACTS_SUCCESS:
-      return { ...state, contacts: action.payload, contactsLoading: false, error: null 
+      return { ...state, contacts: action.payload.map(contact => ({
+        group: contact.fname[0].toUpperCase(),
+        children: {
+        name: contact.fname + " " + contact.lname,
+        email: contact.email,
+        about: contact.about,
+        image: contact.image,
+        }})),
+      contactsLoading: false,
+      error: null 
       };
 
     default: return { ...state };
