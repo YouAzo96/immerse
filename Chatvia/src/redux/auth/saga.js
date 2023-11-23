@@ -9,6 +9,7 @@ import {
   FETCH_USER_PROFILE,
   API_FAILED,
   UPDATE_USER_PROFILE,
+  FETCH_USER_CONTACTS,
 } from './constants';
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
 import {
@@ -20,11 +21,11 @@ import {
   codeSentSuccess,
   setUserProfile,
   logoutUser,
+  setUserContacts,
 } from './actions';
-import { isUserAuthenticated, setLoggedInUser } from '../../helpers/authUtils';
+import { getLoggedInUserInfo, isUserAuthenticated, setLoggedInUser } from '../../helpers/authUtils';
 import axios from 'axios';
 import isEqual from 'lodash/isEqual';
-import pick from 'lodash/pick';
 
 /**
  * Sets the session
@@ -77,6 +78,7 @@ function* logout({ payload: { history } }) {
  */
 function* register({ payload: { user } }) {
   try {
+    console.log("register user is:", user);
     const response = yield call(create, '/users/register', user);
     yield put(registerUserSuccess(response.token));
   } catch (error) {
@@ -118,16 +120,41 @@ function* fetchUserProfile() {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    console.log("saga API response is:", response)
+    const loggedUser = getLoggedInUserInfo();
 
     const user = {
       ...response,
+      fname: loggedUser.fname,
+      lname: loggedUser.lname,
+      email: loggedUser.email,
+      about: response.about,
       image: response.image ? response.image : defaultImage,
     }
     yield put(setUserProfile(user));
   }  catch (error) {
     console.log("Error in fetchUser: ", error)
+    yield put(apiError(error));
+  }
+}
+
+// fetch the contacts for the user
+function* fetchUserContacts() {
+  try {
+    const token = localStorage.getItem('authUser').replace(/"/g, '');
+    const response = yield call(get, 'users/contacts', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Assuming response is an array of contacts
+    const contacts = response.map(contact => ({
+      ...contact,
+      image: contact.image ? contact.image : defaultImage,
+    }));
+
+    yield put(setUserContacts(contacts));
+  } catch (error) {
     yield put(apiError(error));
   }
 }
@@ -197,6 +224,11 @@ export function* watchForgetPassword() {
 export function* watchFetchUserProfile() {
   yield takeEvery(FETCH_USER_PROFILE, fetchUserProfile);
 }
+
+export function* watchFetchUserContacts() {
+  yield takeEvery(FETCH_USER_CONTACTS, fetchUserContacts);
+}
+
 export function* watchApiError() {
   yield takeEvery(API_FAILED, apiErrorHandler);
 }
@@ -214,6 +246,7 @@ function* authSaga() {
     fork(watchRegisterUser),
     fork(watchForgetPassword),
     fork(watchFetchUserProfile),
+    fork(watchFetchUserContacts),
     fork(watchApiError),
     fork(watchUpdateUserProfile),
   ]);

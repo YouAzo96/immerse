@@ -10,17 +10,15 @@ import {
   FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
+  FETCH_USER_CONTACTS,
+  FETCH_USER_CONTACTS_SUCCESS,
+  FETCH_USER_PROFILE,
 } from './constants';
 
-import { getLoggedInUser, getLoggedInUserInfo } from '../../helpers/authUtils';
-
 const INIT_STATE = {
-  user: {
-    fname: getLoggedInUserInfo()?.fname,
-    lname: getLoggedInUserInfo()?.lname,
-    email: getLoggedInUserInfo()?.email,
-    about: getLoggedInUser()?.about,
-    image: getLoggedInUser()?.image,},
+  user: null,
+  contacts: null,
+  contactsLoading: false,
   loading: false,
   isUserLogout: false,
   error: null,
@@ -70,14 +68,28 @@ const Auth = (state = INIT_STATE, action) => {
         isUserLogout: false,
       };
 
+    case FETCH_USER_PROFILE:
+      return { ...state, loading: true };
+
     case FETCH_USER_PROFILE_SUCCESS:
         return { ...state,
-              user: {...INIT_STATE.user,
+              user: {
+                fname: action.payload.fname,
+                lname: action.payload.lname,
+                email: action.payload.email,
                 about: action.payload.about,
-                image: action.payload.image},
+                image: action.payload.image
+              },
              loading: false, 
              error: null
         };
+
+    case FETCH_USER_CONTACTS:
+      return { ...state, contactsLoading: true };    
+
+    case FETCH_USER_CONTACTS_SUCCESS:
+      return { ...state, contacts: action.payload, contactsLoading: false, error: null 
+      };
 
     default: return { ...state };
     }

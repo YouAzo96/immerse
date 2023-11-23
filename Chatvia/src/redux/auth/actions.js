@@ -13,6 +13,8 @@ import {
   CODE_SENT,
   CODE_SENT_SUCCESS,
   UPDATE_USER_PROFILE,
+  FETCH_USER_CONTACTS,
+  FETCH_USER_CONTACTS_SUCCESS,
 } from './constants';
 
 export const loginUser = (email, password, history) => ({
@@ -83,4 +85,14 @@ export const setUserProfile = (user) => ({
 export const updateUserProfile = (user) => ({
   type: UPDATE_USER_PROFILE,
   payload: user,
+});
+
+export const fetchUserContacts = () => ({
+  type: FETCH_USER_CONTACTS,
+  payload: {},
+});
+
+export const setUserContacts = (contacts) => ({
+  type: FETCH_USER_CONTACTS_SUCCESS,
+  payload: contacts,
 });

@@ -10,7 +10,7 @@ import { withTranslation } from 'react-i18next';
 let sortedContacts = [
     {
         group: "A",
-        children: [{ name: "Demo" }]
+        children: [{ fname: "Demo" }]
     }
 ]
 
@@ -19,19 +19,17 @@ class Contacts extends Component {
         super(props);
         this.state = {
             modal: false,
-            contacts: this.props.contacts
+            contacts: this.props.contactList || []
         }
         this.toggle = this.toggle.bind(this);
         this.sortContact = this.sortContact.bind(this);
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps !== this.props) {
-            this.setState({
-                contacts: this.props.contacts
-            });
+        if (this.props.contacts !== prevProps.contacts && this.props.contacts) {
+          this.setState({ contacts: this.props.contacts });
         }
-    }
+      }
 
     toggle() {
         this.setState({ modal: !this.state.modal });
@@ -41,23 +39,28 @@ class Contacts extends Component {
         let data = this.state.contacts.reduce((r, e) => {
             try {
                 // get first letter of name of current element
-                let group = e.name[0];
+                let group = e.fname[0];
+                console.log("group is:", group);
                 // if there is no property in accumulator with this letter create it
-                if (!r[group]) r[group] = { group, children: [e] }
+                if (!r[group]) {
+                    console.log("e is:", [e]);
+                     r[group] = { 
+                    group, children: [e] }
                 // if there is push current element to children array for that letter
-                else r[group].children.push(e);
+                      } else r[group].children.push(e);
             } catch (error) {
+                console.log("error in sortContact is:", error);
                 return sortedContacts;
             }
-            // return accumulator
             return r;
         }, {})
 
         // since data at this point is an object, to get array of values
         // we use Object.values method
         let result = Object.values(data);
+        console.log("result is:", result);
         this.setState({ contacts: result });
-        sortedContacts = result;
+          sortedContacts = result;
         return result;
     }
 
@@ -140,7 +143,7 @@ class Contacts extends Component {
                                                 <li key={key} >
                                                     <div className="d-flex align-items-center">
                                                         <div className="flex-grow-1">
-                                                            <h5 className="font-size-14 m-0">{child.name}</h5>
+                                                            <h5 className="font-size-14 m-0">{child.fname + " " + child.lname}</h5>
                                                         </div>
                                                         <UncontrolledDropdown>
                                                             <DropdownToggle tag="a" className="text-muted">

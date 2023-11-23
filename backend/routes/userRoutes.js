@@ -46,6 +46,7 @@ router.post('/register', async (req, res) => {
 
 // Route for user login
 router.post('/login', authMiddleware);
+
 //Generate verification code for password reset process
 router.post('/code-gen', async (req, res) => {
   try {
@@ -169,12 +170,16 @@ router.get('/contacts', async (req, res) => {
     return res.status(405).json({ error: 'Invalid Or Expired Token' });
   }
   try {
-    const [results, flds] = await db.promise().query(
-      'SELECT u.user_id,u.fname,u.lname,u.email FROM user u \
-        JOIN userhascontact uc ON u.user_id = uc.contact_id \
-        WHERE uc.user_id = ?;',
-      [isValidUser.user_id]
-    );
+    const sql = `
+      SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
+      JOIN userhascontact uc ON u.user_id = uc.contact_id
+      WHERE uc.user_id = ?
+      UNION
+      SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
+      JOIN userhascontact uc ON u.user_id = uc.user_id
+      WHERE uc.contact_id = ?
+    `;
+    const [results] = await db.promise().query(sql, [isValidUser.user_id, isValidUser.user_id]);
     return res.status(200).json(results);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error: ' + error });

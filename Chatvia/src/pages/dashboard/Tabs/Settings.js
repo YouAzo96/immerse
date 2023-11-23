@@ -10,7 +10,7 @@ import CustomCollapse from "../../../components/CustomCollapse";
 
 //i18n
 import { useTranslation } from 'react-i18next';
-import { setUserProfile, updateUserProfile } from '../../../redux/actions';
+import { updateUserProfile } from '../../../redux/actions';
 
 function Settings(props) {
     const dispatch = useDispatch();
@@ -28,6 +28,8 @@ function Settings(props) {
     const [preview, setPreview] = useState(user.image);
     const [file, setFile] = useState(null);
     const fileInputRef = useRef();
+
+    // console.log("user in settings is:", user);
 
     /* intilize t variable for multi language implementation */
     const { t } = useTranslation();
@@ -174,20 +176,34 @@ function Settings(props) {
                                 </div>
 
                                 <div>
-                                  <p className="text-muted mb-1">{t('Name')}</p>
+                                  <p className="text-muted mb-1">{t('First Name')}</p>
                                     {isEditing ? (
                                       <Input 
                                       type="text" 
                                       className="form-control" 
-                                      value={t(fname + " " + lname)}
+                                      value={t(fname)}
                                       onChange={(e) => {
-                                        const [newFname, newLname] = e.target.value.split(" ");
-                                        setFname(newFname);
-                                        setLname(newLname);
+                                        setFname(e.target.value);
                                       }}
                                      />
                                     ) : (
-                                      <h5 className="font-size-14">{t(user.fname + " " + user.lname)}</h5>
+                                      <h5 className="font-size-14">{t(user.fname)}</h5>
+                                    )}
+                                </div>
+
+                                <div>
+                                  <p className="text-muted mb-1">{t('Last Name')}</p>
+                                    {isEditing ? (
+                                      <Input 
+                                      type="text" 
+                                      className="form-control" 
+                                      value={t(lname)}
+                                      onChange={(e) => {
+                                        setLname(e.target.value);
+                                      }}
+                                     />
+                                    ) : (
+                                      <h5 className="font-size-14">{t(user.lname)}</h5>
                                     )}
                                 </div>
 
