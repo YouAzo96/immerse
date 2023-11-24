@@ -23,7 +23,11 @@ import {
   logoutUser,
   setUserContacts,
 } from './actions';
-import { getLoggedInUserInfo, isUserAuthenticated, setLoggedInUser } from '../../helpers/authUtils';
+import {
+  getLoggedInUserInfo,
+  isUserAuthenticated,
+  setLoggedInUser,
+} from '../../helpers/authUtils';
 import axios from 'axios';
 import isEqual from 'lodash/isEqual';
 
@@ -69,7 +73,7 @@ function* logout({ payload: { history } }) {
     yield put(logoutUserSuccess(true));
     localStorage.removeItem('authUser');
   } catch (error) {
-    console.log("Error occured in logout:", error);
+    console.log('Error occured in logout:', error);
     yield put(apiError(error));
   }
 }
@@ -79,7 +83,7 @@ function* logout({ payload: { history } }) {
  */
 function* register({ payload: { user } }) {
   try {
-    console.log("register user is:", user);
+    console.log('register user is:', user);
     const response = yield call(create, '/users/register', user);
     yield put(registerUserSuccess(response.token));
   } catch (error) {
@@ -130,10 +134,10 @@ function* fetchUserProfile() {
       email: loggedUser.email,
       about: response.about,
       image: response.image ? response.image : defaultImage,
-    }
+    };
     yield put(setUserProfile(user));
-  }  catch (error) {
-    console.log("Error in fetchUser: ", error)
+  } catch (error) {
+    console.log('Error in fetchUser: ', error);
     yield put(apiError(error));
   }
 }
@@ -149,7 +153,7 @@ function* fetchUserContacts() {
     });
 
     // Assuming response is an array of contacts
-    const contacts = response.map(contact => ({
+    const contacts = response.map((contact) => ({
       ...contact,
       image: contact.image ? contact.image : defaultImage,
     }));
@@ -163,17 +167,17 @@ function* fetchUserContacts() {
 // handle Api errors
 function* apiErrorHandler({ payload: error }) {
   try {
-  if (error && error.status === 405 && !isUserAuthenticated()) {
-    yield put(logoutUser());
-  }
-} catch (error) {
-  console.log("Api Error", error);
+    if (error && error.status === 405 && !isUserAuthenticated()) {
+      yield put(logoutUser());
+    }
+  } catch (error) {
+    console.log('Api Error', error);
   }
 }
 
 // update the user profile
 function* updateUserProfile(action) {
-  console.log("updateUserProfile action is:", action);
+  console.log('updateUserProfile action is:', action);
   try {
     const currentUser = yield select((state) => state.Auth.user);
     const updatedUser = Object.keys(currentUser).reduce((result, key) => {
@@ -192,15 +196,17 @@ function* updateUserProfile(action) {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("updateUserProfile response is:", response);
-      const user = {...currentUser, ...updatedUser};
+      console.log('updateUserProfile response is:', response);
+      const user = { ...currentUser, ...updatedUser };
+
+      console.log('current and updated user: ' + JSON.stringify(user));
       setLoggedInUser(response.token);
-      yield put (setUserProfile(user));
+      yield put(setUserProfile(user));
     } else {
-      console.log("No changes to update");
+      console.log('No changes to update');
     }
   } catch (error) {
-    console.log("Error in updateUserProfile:", error);
+    console.log('Error in updateUserProfile:', error);
     yield put(apiError(error));
   }
 }
@@ -237,7 +243,6 @@ export function* watchApiError() {
 export function* watchUpdateUserProfile() {
   yield takeEvery(UPDATE_USER_PROFILE, updateUserProfile);
 }
-
 
 function* authSaga() {
   yield all([

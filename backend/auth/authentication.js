@@ -4,24 +4,12 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const bc = require('bcrypt');
+const { dbConfig, secretKey } = require('../envRoutes');
 const app = express();
 const port = 3002;
 
 // Create a MySQL connection
-//Youssef: Turn this to a pool connection
-const db = mysql.createConnection({
-  // host: 'sql9.freemysqlhosting.net', // Change to database host
-  // user: 'sql9652386',      // Change to database user
-  // password: 'NqHfNyamBY',  // Change to database password
-  // database: 'sql9652386',  // Change to database name
-  host: 'localhost',
-  user: 'root',
-  password: 'password',
-  database: 'immerse',
-});
-
-// Secret key for JWT token
-const secretKey = 'MyToKeN';
+const db = mysql.createConnection(dbConfig);
 
 app.use(bodyParser.json());
 
@@ -61,7 +49,43 @@ app.post('/auth', async (req, res) => {
 
   return res.status(200).json({ token: token }); //user authenticated and token generated
 });
+app.post('/verify', async (req, res) => {
+  const { password } = req.body;
+  try {
+    const isValidUser = await verifiedUser(req);
+    if (!isValidUser) {
+      return res.status(405).json({ error: 'Invalid Or Expired Token' });
+    }
+    const sql = 'SELECT password FROM user WHERE user_id = ?;';
+    const [results, fields] = await db
+      .promise()
+      .query(sql, [isValidUser.user_id]);
 
+    if (results.length === 0) {
+      return res.status(403).json({ error: 'User Not Found!' });
+    }
+    user = results[0];
+
+    if (!(await bc.compare(password, user.password))) {
+      return res.status(404).json({ error: 'Credentials Missmatch' });
+    }
+    return res.status(200).json({ message: 'Access Granted!' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+const verifiedUser = async (req) => {
+  const token = req.headers['authorization'].split(' ')[1].replace(/"/g, '');
+  const isValidUser = jwt.verify(token, secretKey, (err, user) => {
+    if (err) {
+      return false;
+    } else {
+      return user;
+    }
+  });
+  return isValidUser;
+};
 app.listen(port, () => {
   console.log(`Authentication Microservice is running on port ${port}`);
 });

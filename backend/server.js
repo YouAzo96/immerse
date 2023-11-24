@@ -6,7 +6,7 @@ const errorHandler = require('./errorHandler.js');
 const http = require('http');
 const socketIO = require('socket.io');
 const jwt = require('jsonwebtoken');
-
+const { frontendServiceUrl, secretKey } = require('./envRoutes.js');
 const app = express();
 const port = process.env.PORT || 3001;
 // Middleware
@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: frontendServiceUrl,
     methods: ['GET', 'POST'],
   },
 });
@@ -30,11 +30,6 @@ const db = mysql.createPool({
   database: 'immerse',
   connectionLimit: 10, // Adjust the limit based on your requirements
 });
-// Microservices URLs
-
-const authServiceUrl = 'http://localhost:3002';
-
-module.exports = { db, authServiceUrl };
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
@@ -42,7 +37,6 @@ const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const conversationHasParticipantRoutes = require('./routes/conversationHasParticipantRoutes');
 const userHasContactRoutes = require('./routes/userHasContactRoutes');
-const { log } = require('console');
 
 // Use the routes
 app.use('/api/users', userRoutes);
@@ -58,7 +52,7 @@ io.on('connection', async (socket) => {
     socket.handshake.query.userId == 'null'
       ? null
       : socket.handshake.query.userId.slice(1, -1);
-  console.log('Backend: ' + token);
+  //console.log('Backend: ' + token);
   if (!token) {
     return;
   }
@@ -110,9 +104,8 @@ io.on('connection', async (socket) => {
 });
 
 const verifiedUser = async (token) => {
-  const isValidUser = jwt.verify(token, 'MyToKeN', (err, user) => {
+  const isValidUser = jwt.verify(token, secretKey, (err, user) => {
     if (err) {
-      console.log(err);
       return false;
     } else {
       return user;

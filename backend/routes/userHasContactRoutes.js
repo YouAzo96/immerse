@@ -1,29 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const mysql = require('mysql2');
 
+const { dbConfig } = require('../envRoutes');
 
+const db = mysql.createConnection(dbConfig);
 // Route for adding a new contact for a user
 router.post('/', (req, res) => {
   const { userId, contactId } = req.body;
-  try{
-  // Insert a new user contact into the UserHasContact table
-  const sql = 'INSERT INTO UserHasContact (user_id, contact_id) VALUES (?, ?)';
+  try {
+    // Insert a new user contact into the UserHasContact table
+    const sql =
+      'INSERT INTO UserHasContact (user_id, contact_id) VALUES (?, ?)';
 
-  // Use the database connection to execute the query
-  db.query(sql, [userId, contactId], (err, results) => {
-    if (err) {
-      console.error('Error adding contact:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-      return;
-    }
+    // Use the database connection to execute the query
+    db.query(sql, [userId, contactId], (err, results) => {
+      if (err) {
+        console.error('Error adding contact:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
 
-    // Send a success response
-    res.json({ message: 'Contact added successfully' });
-  });
+      // Send a success response
+      res.json({ message: 'Contact added successfully' });
+    });
   } catch (error) {
-    console.log("Error occured in adding contact:", error);
+    console.log('Error occured in adding contact:', error);
     return res.status(500).json({ error: 'Internal Server Error' + error });
-  }2
+  }
+  2;
 });
 
 // Route for fetching all contacts for a user
@@ -50,9 +55,10 @@ router.delete('/:userId/:contactId', (req, res) => {
   const userId = req.params.userId;
   const contactId = req.params.contactId;
 
-  try{
+  try {
     // Delete the user contact from the UserHasContact table
-    const sql = 'DELETE FROM UserHasContact WHERE user_id = ? AND contact_id = ?';
+    const sql =
+      'DELETE FROM UserHasContact WHERE user_id = ? AND contact_id = ?';
 
     // Use the database connection to execute the query
     db.query(sql, [userId, contactId], (err, results) => {
@@ -64,11 +70,11 @@ router.delete('/:userId/:contactId', (req, res) => {
       // Send a success response
       res.json({ message: 'Contact removed successfully' });
     });
-    } catch (error) {
-      console.log("Error occured in removing contact:", error);
-      return res.status(500).json({ error: 'Internal Server Error' + error });
-    }
-  });
+  } catch (error) {
+    console.log('Error occured in removing contact:', error);
+    return res.status(500).json({ error: 'Internal Server Error' + error });
+  }
+});
 
 // Other user contact-related routes can be added here
 module.exports = router;

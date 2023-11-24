@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const request = require('request-promise');
-const authServiceUrl = 'http://localhost:3002';
-
+const { authServiceUrl, secretKey } = require('../envRoutes');
 //verification of tokens
 async function authenticateToken(req, res) {
   const token =
@@ -31,7 +30,7 @@ async function authenticateToken(req, res) {
   }
   if (!flag) {
     //Token received, we must verify it
-    jwt.verify(token, 'MyToKeN', async (err, user) => {
+    jwt.verify(token, secretKey, async (err, user) => {
       if (err) {
         //If token exists but invalid, return error and redirect to login page
         return res.status(403).json({ error: 'Forbidden | Invalid Token!' });
