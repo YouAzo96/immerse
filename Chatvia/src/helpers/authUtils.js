@@ -16,7 +16,7 @@ const isUserAuthenticated = () => {
       console.warn('access token expired');
       return false;
     }
-      return true;
+    return true;
   } catch (e) {
     console.warn('access token expired');
     return false;
@@ -31,11 +31,11 @@ const getLoggedInUserInfo = () => {
  */
 const getLoggedInUser = () => {
   try {
-  const user = localStorage.getItem('authUser');
-  
-  return user ? (typeof user == 'object' ? user : JSON.parse(user)) : null;
+    const user = localStorage.getItem('authUser');
+
+    return user ? (typeof user == 'object' ? user : JSON.parse(user)) : null;
   } catch (error) {
-    console.log("Error in getLoggedInUser:", error);
+    console.log('Error in getLoggedInUser:', error);
   }
 };
 
@@ -46,7 +46,6 @@ const setLoggedInUser = (user) => {
   localStorage.setItem('authUser', JSON.stringify(user));
   window.location.reload();
 };
-
 
 export {
   isUserAuthenticated,

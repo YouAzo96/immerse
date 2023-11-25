@@ -33,16 +33,11 @@ const db = mysql.createPool({
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
-const messageRoutes = require('./routes/messageRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
-const conversationHasParticipantRoutes = require('./routes/conversationHasParticipantRoutes');
-const userHasContactRoutes = require('./routes/userHasContactRoutes');
 
 // Use the routes
 app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
 app.use('/api/conversations', conversationRoutes);
-app.use('/api/conversation/participant', conversationHasParticipantRoutes);
 
 app.use(errorHandler);
 

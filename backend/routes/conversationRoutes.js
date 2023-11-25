@@ -24,7 +24,7 @@ router.post('/', (req, res) => {
 // Route for fetching all conversations
 router.get('/', (req, res) => {
   // Query to retrieve all conversations
-  const sql = 'SELECT * FROM Conversation';
+  const sql = 'SELECT * FROM Conversation where ';
 
   // Use the database connection to execute the query
   db.query(sql, (err, results) => {
@@ -39,30 +39,9 @@ router.get('/', (req, res) => {
   });
 });
 
-// Route for fetching a conversation by ID
-router.get('/:convId', (req, res) => {
-  const convId = req.params.convId;
-
-  // Query to retrieve a conversation by ID
-  const sql = 'SELECT * FROM Conversation WHERE conv_id = ?';
-
-  // Use the database connection to execute the query
-  db.query(sql, [convId], (err, results) => {
-    if (err) {
-      console.error('Error fetching conversation by ID:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-      return;
-    }
-
-    // Send the retrieved conversation as a JSON response
-    if (results.length === 0) {
-      res.status(404).json({ error: 'Conversation not found' });
-    } else {
-      res.json(results[0]);
-    }
-  });
-});
-
-// Other conversation-related routes can be added here
-
+// conv by user_id
+// messages for conv_id
+// add msgs to conv_id
+// flush out messages and conv for user_id
+//
 module.exports = router;

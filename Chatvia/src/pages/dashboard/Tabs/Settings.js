@@ -10,7 +10,6 @@ import {
   Input,
   Label,
 } from 'reactstrap';
-import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { readAndCompressImage } from 'browser-image-resizer';
 import SimpleBar from 'simplebar-react';
