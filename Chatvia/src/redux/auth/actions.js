@@ -15,6 +15,11 @@ import {
   UPDATE_USER_PROFILE,
   FETCH_USER_CONTACTS,
   FETCH_USER_CONTACTS_SUCCESS,
+  INVITE_CONTACT,
+  INVITE_CONTACT_SUCCESS,
+  SHOW_ALERT,
+  HIDE_ALERT,
+  TRIGGER_ALERT,
 } from './constants';
 
 export const loginUser = (email, password, history) => ({
@@ -95,4 +100,29 @@ export const fetchUserContacts = () => ({
 export const setUserContacts = (contacts) => ({
   type: FETCH_USER_CONTACTS_SUCCESS,
   payload: contacts,
+});
+
+export const inviteContact = (email, message) => ({
+  type: INVITE_CONTACT,
+  payload: {refereeEmail: email, message: message},
+});
+
+export const inviteContactSuccess = (contact) => ({
+  type: INVITE_CONTACT_SUCCESS,
+  payload: contact,
+});
+
+export const showAlert = (message, color) => ({
+  type: SHOW_ALERT,
+  payload: { message, color },
+});
+
+export const hideAlert = () => ({
+  type: HIDE_ALERT,
+  payload: {},
+});
+
+export const triggerAlert = (message, color) => ({
+  type: TRIGGER_ALERT,
+  payload: { message, color },
 });

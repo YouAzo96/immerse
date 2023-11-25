@@ -112,15 +112,15 @@ router.post('/verify', async (req, res) => {
 
 router.post('/invite', async (req, res) => {
   //Jancel: This takes a token in headers and a 'refereeEmail' field in the body.
-  const isValidUser = await verifiedUser(req);
-  if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Or Expired Token' });
-  }
+  try {
+    const isValidUser = await verifiedUser(req);
+    if (!isValidUser) {
+      return res.status(401).json({ error: 'Invalid or Expired Token' });
+    }
   const refereeEmail = req.body.refereeEmail;
   if (!refereeEmail)
     return res.status(405).json({ error: 'Missing Param [referee email]' });
-
-  try {
+    console.log('Invite API called', req.body)
     //check if user exist:
     const [referee, fields] = await db
       .promise()
@@ -143,18 +143,21 @@ router.post('/invite', async (req, res) => {
         senderId: isValidUser.user_id,
         receiverId: referee[0].user_id,
       });
-      return res.status(200).json({ message: 'Invitation Sent' });
+      return res.status(200).json({ message: 'Invitation Sent', color : 'success' });
     } else {
       emitter.emit('invite-to-app', {
         email: refereeEmail,
         fromName: isValidUser.fname + ' ' + isValidUser.lname,
         senderId: isValidUser.user_id,
       });
+      return res.status(200).json({ message: 'Invitation Sent', color : 'success' });
     }
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+    console.log('Internal Server Error: ' + error);
+    return res.status(500).json({ error: 'Internal Server Error: ' + error, color : 'danger' });
   }
 });
+
 router.post('/accept-contact/:sender/:receiver', async (req, res) => {
   const sender = req.params.sender;
   const receiver = req.params.receiver;
@@ -190,6 +193,7 @@ router.post('/accept-contact/:sender/:receiver', async (req, res) => {
     .status(200)
     .json({ message: 'Invitation Accepted, Contact Added!' });
 });
+
 router.post('/refuse-contact/:sender/:receiver', async (req, res) => {
   const sender = req.params.sender;
   const receiver = req.params.receiver;
@@ -206,6 +210,7 @@ router.post('/refuse-contact/:sender/:receiver', async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error: ' + error });
   }
 });
+
 //Generate verification code for password reset process
 router.post('/code-gen', async (req, res) => {
   try {
@@ -275,63 +280,52 @@ router.post('/forget-pwd', async (req, res) => {
       }
     }
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+    return res.status(500).json({ error });
   }
 });
 
 // GET a user by email
 
 router.get('/me', async (req, res) => {
-  const isValidUser = await verifiedUser(req);
-  if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Or Expired Token' });
-  }
   try {
+    const isValidUser = await verifiedUser(req);
+    if (!isValidUser) {
+      return res.status(401).json({ error: 'Invalid or Expired Token' });
+    }
     const user = await db
       .promise()
-      .query('SELECT about,image FROM User WHERE email = ?', [
-        isValidUser.email,
-      ]);
+      .query('SELECT about,image FROM User WHERE email = ?', [isValidUser.email]);
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
-    } else {
-      try {
-        if (!user[0][0].image) {
-          return res.status(200).json({ about: user[0][0].about, image: null });
-        }
-        const imageBuffer = user[0][0].image;
-        if (!Buffer.isBuffer(imageBuffer)) {
-          return res.status(500).json({ error: 'Invalid image format' });
-        }
-        const base64Image = Buffer.from(imageBuffer).toString('base64');
-        const image = `data:image;base64,${base64Image}`;
-        const userData = {
-          about: user[0][0].about,
-          image: image,
-        };
-
-        return res.status(200).json(userData);
-      } catch (error) {
-        return res
-          .status(500)
-          .json({ error: 'Internal Server Error: ' + error });
-      }
     }
+    if (!user[0][0].image) {
+      return res.status(200).json({ about: user[0][0].about, image: null });
+    }
+    const imageBuffer = user[0][0].image;
+    if (!Buffer.isBuffer(imageBuffer)) {
+      return res.status(500).json({ error: 'Invalid image format' });
+    }
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const image = `data:image;base64,${base64Image}`;
+    const userData = {
+      about: user[0][0].about,
+      image: image,
+    };
+    return res.status(200).json(userData);
   } catch (error) {
     console.log('Error in /me:', error);
-    return res
-      .status(error.status || 500)
-      .json({ error: error || 'Internal Server Error' });
+    return res.status(error.status || 500).json({ error });
   }
 });
 
+
 //Get Contacts
 router.get('/contacts', async (req, res) => {
-  const isValidUser = await verifiedUser(req);
-  if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Or Expired Token' });
-  }
   try {
+    const isValidUser = await verifiedUser(req);
+    if (!isValidUser) {
+      return res.status(401).json({ error: 'Invalid or Expired Token' });
+    }
     const sql = `
       SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
       JOIN userhascontact uc ON u.user_id = uc.contact_id
@@ -346,18 +340,17 @@ router.get('/contacts', async (req, res) => {
       .query(sql, [isValidUser.user_id, isValidUser.user_id]);
     return res.status(200).json(results);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error: ' + error });
+    res.status(500).json({ error });
   }
 });
 
 // PUT (update) a user's information: image or status
 router.put('/update', async (req, res) => {
-  const isValidUser = await verifiedUser(req);
-  if (!isValidUser) {
-    return res.status(405).json({ error: 'Invalid Or Expired Token' });
-  }
-
   try {
+    const isValidUser = await verifiedUser(req);
+    if (!isValidUser) {
+      return res.status(401).json({ error: 'Invalid or Expired Token' });
+    }
     const updates = [];
     const values = [];
 
@@ -405,22 +398,28 @@ router.put('/update', async (req, res) => {
       .json({ message: 'User updated successfully', token: newToken });
   } catch (error) {
     console.log('Error in /update:', error);
-    return res.status(500).json({ error: 'Internal Server Error: ' + error });
+    return res.status(500).json({ error });
   }
 });
 
 const verifiedUser = async (req) => {
-  const token = req.headers['authorization'].split(' ')[1].replace(/"/g, '');
-  const isValidUser = jwt.verify(token, secretKey, (err, user) => {
-    if (err) {
-      console.log('User Validation Error: ' + err);
-      return false;
+  try {
+    const token = req.headers['authorization'].split(' ')[1].replace(/"/g, '');
+    const isValidUser = await jwt.verify(token, secretKey);
+    return isValidUser;
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      // Handle expired token error
+      console.log('TokenExpiredError: ', error);
+      throw { status: 401, message: 'Token expired' };
     } else {
-      return user;
+      // Handle other JWT verification errors
+      console.log('User Validation Error: ' + error);
+      throw { status: 401, message: 'Invalid token' };
     }
-  });
-  return isValidUser;
+  }
 };
+
 
 const generateVerificationCode = () => {
   const code = crypto.randomBytes(2).toString('hex'); // Generate a 4-digit code
@@ -445,7 +444,7 @@ emitter.on('contactAdded', async (eventData) => {
       console.log('Event sent successfully:', response);
     })
     .catch((error) => {
-      console.error('Error sending event:', error);
+      console.error('Error sending contactAdded event:', error);
     });
   delete notificationServiceEndPoint.json; //reset endpoint
 });
@@ -455,7 +454,7 @@ emitter.on('verificationCode', (eventData) => {
   notificationServiceEndPoint.json.eventType = 'verificationCode';
   request(notificationServiceEndPoint, (error, response, body) => {
     if (error) {
-      console.error('Error sending event:', error.message);
+      console.error('Error sending verificationCode event:', error.message);
     } else {
       console.log('Event sent successfully:', response);
     }
@@ -468,7 +467,7 @@ emitter.on('userRegistered', (eventData) => {
   notificationServiceEndPoint.json.eventType = 'userRegistered'; //modify
   request(notificationServiceEndPoint, (error, response, body) => {
     if (error) {
-      console.error('Error sending event:', error.message);
+      console.error('Error sending userRegistered event:', error.message);
     } else {
       console.log('Event sent successfully:', response);
     }
@@ -481,7 +480,7 @@ emitter.on('passwordChanged', (eventData) => {
   notificationServiceEndPoint.json.eventType = 'passwordChanged'; //modify
   request(notificationServiceEndPoint, (error, response, body) => {
     if (error) {
-      console.error('Error sending event:', error.message);
+      console.error('Error sending passwordChanged event:', error.message);
     } else {
       console.log('passwordChanged event sent successfully:', response);
     }
@@ -494,7 +493,7 @@ emitter.on('invite-to-app', (eventData) => {
   notificationServiceEndPoint.json.eventType = 'invite-to-app'; //modify
   request(notificationServiceEndPoint, (error, response, body) => {
     if (error) {
-      console.error('Error sending event:', error.message);
+      console.error('Error sending invite-to-app event:', error);
     } else {
       console.log('invite-to-app event sent successfully:', response);
     }
@@ -507,7 +506,7 @@ emitter.on('contactInvitation', (eventData) => {
   notificationServiceEndPoint.json.eventType = 'contactInvitation'; //modify
   request(notificationServiceEndPoint, (error, response, body) => {
     if (error) {
-      console.error('Error sending event:', error.message);
+      console.error('Error sending contactInvitation event:', error.message);
     } else {
       console.log('contactInvitation event sent successfully:', response);
     }

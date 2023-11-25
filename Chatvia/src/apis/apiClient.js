@@ -1,6 +1,8 @@
 import axios from 'axios';
 import config from '../config';
 import { isUserAuthenticated } from '../helpers/authUtils';
+import { logoutUser } from '../redux/auth/actions';
+import sagas from '../redux/sagas';
 
 
 // default
@@ -21,13 +23,20 @@ axios.interceptors.response.use(
 );
 
 // intercepting to verify token
-axios.interceptors.request.use(
- (config) => {
-  isUserAuthenticated();
-  return config;
-},
-(error) => Promise.reject(error)
-);
+// apiClient.js
+
+const setupInterceptor = () => {
+  axios.interceptors.request.use(
+    (config) => {
+      console.log('intercepting to verify token', isUserAuthenticated() && config.url !== '/login');
+      if (!isUserAuthenticated()) {
+        sagas.dispatch(logoutUser());
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+}
 
 /**
  * Sets the default authorization
@@ -67,4 +76,4 @@ class APIClient {
   };
 }
 
-export { APIClient, setAuthorization };
+export { APIClient, setAuthorization, setupInterceptor };

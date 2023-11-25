@@ -20,6 +20,7 @@ import CustomCollapse from '../../../components/CustomCollapse';
 //i18n
 import { useTranslation } from 'react-i18next';
 import { updateUserProfile } from '../../../redux/actions';
+import { PacmanLoader } from 'react-spinners';
 
 function Settings(props) {
   const dispatch = useDispatch();
@@ -36,6 +37,7 @@ function Settings(props) {
   const [isEditing, setIsEditing] = useState(false);
   const [preview, setPreview] = useState(user.image);
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef();
 
   // console.log("user in settings is:", user);
@@ -121,6 +123,7 @@ function Settings(props) {
   };
 
   const handleUpload = () => {
+    setLoading(true);
     const base64Image = file.split(',')[1];
     dispatch(updateUserProfile({ image: base64Image }));
   };
@@ -133,6 +136,9 @@ function Settings(props) {
 
   return (
     <React.Fragment>
+      {loading ? (
+        <PacmanLoader />
+      ) : (
       <div>
         <div className="px-4 pt-4">
           <h4 className="mb-0">{t('Settings')}</h4>
@@ -447,6 +453,7 @@ function Settings(props) {
         </SimpleBar>
         {/* End User profile description */}
       </div>
+      )}
     </React.Fragment>
   );
 }

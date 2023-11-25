@@ -31,7 +31,7 @@ getToken(messaging, {
 
 function Index(props) {
   document.title =
-    ' Starter Page | Chatvia - Responsive Bootstrap 5 Admin Dashboard';
+    ' Starter Page | Immerse: Real-Time Chat App';
   return (
     <React.Fragment>
       <div>

@@ -25,7 +25,8 @@ import avatar1 from "../../../assets/images/users/avatar-1.jpg";
 import { useTranslation } from 'react-i18next';
 
 function UserChat(props) {
-
+    const user = props.loggedUser;
+    // console.log("props in UserChat are:", props);
     const ref = useRef();
 
     const [modal, setModal] = useState(false);
