@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem, Button, Modal, ModalHeader, ModalBody, ModalFooter, UncontrolledTooltip, Form, Label, Input, InputGroup, } from 'reactstrap';
+import { UncontrolledDropdown, DropdownToggle, Alert, DropdownMenu, DropdownItem, Button, Modal, ModalHeader, ModalBody, ModalFooter, UncontrolledTooltip, Form, Label, Input, InputGroup, } from 'reactstrap';
 import SimpleBar from "simplebar-react";
+import { bindActionCreators } from 'redux';
 
 import { connect } from "react-redux";
+import { inviteContact } from '../../../redux/auth/actions';
 
 import { withTranslation } from 'react-i18next';
 
@@ -20,7 +22,12 @@ class Contacts extends Component {
         this.state = {
             searchTerm: "",
             modal: false,
-            contacts: this.props.contactList || []
+            contacts: this.props.contactList || [],
+          //   alert: {
+          //     visible: this.props.alert.visible,
+          //     message: this.props.alert.message,
+          //     color: this.props.alert.color
+          // }
         }
         this.toggle = this.toggle.bind(this);
         this.sortContact = this.sortContact.bind(this);
@@ -72,7 +79,6 @@ class Contacts extends Component {
     
     filterContacts = () => {
         const { contacts, searchTerm } = this.state;
-        console.log("contacts in filterContacts are:", contacts);
         if (!searchTerm) {
           return contacts; // No search term, return all contacts
         }
@@ -102,8 +108,18 @@ class Contacts extends Component {
         this.sortContact();
     }
 
+    handleInviteClick = () => {
+      // const email = document.getElementById("addcontactemail-input").value;
+      // const message = document.getElementById("addcontact-invitemessage-input").value;
+      const email = "jakecruz889@gmail.com"
+      const message = "Hello, I would like to add you as a contact on Immerse: Real-Time Chat App"
+      this.props.inviteContact(email, message);
+    }
+
     render() {
+        const { alert } = this.state;
         const filteredContacts = this.filterContacts();
+        console.log("contacts in filterContacts are:", this.state);
         const { t } = this.props;
         return (
             <React.Fragment>
@@ -134,14 +150,14 @@ class Contacts extends Component {
                                         <Input type="email" className="form-control" id="addcontactemail-input" placeholder="Enter Email" />
                                     </div>
                                     <div>
-                                        <Label className="form-label" htmlFor="addcontact-invitemessage-input">{t('Invatation Message')}</Label>
+                                        <Label className="form-label" htmlFor="addcontact-invitemessage-input">{t('Invitation Message')}</Label>
                                         <textarea className="form-control" id="addcontact-invitemessage-input" rows="3" placeholder="Enter Message"></textarea>
                                     </div>
                                 </Form>
                             </ModalBody>
                             <ModalFooter>
                                 <Button type="button" color="link" onClick={this.toggle}>Close</Button>
-                                <Button type="button" color="primary">Invite Contact</Button>
+                                <Button type="button" color="primary" onClick={this.handleInviteClick}>Invite Contact</Button>
                             </ModalFooter>
                         </Modal>
                         {/* End Add contact Modal */}
@@ -162,14 +178,14 @@ class Contacts extends Component {
                         {/* End search-box */}
                     </div>
                     {/* end p-4 */}
-
+                    {/* {this.state.alert.visible && <Alert color={this.state.alert.color}>{this.state.alert.message}</Alert>} */}
                     {/* Start contact lists */}
                     <SimpleBar style={{ maxHeight: "100%" }} id="chat-room" className="p-4 chat-message-list chat-group-list">
                     {filteredContacts.map((contactGroup, key) => (
   <div key={key} className={key + 1 === 1 ? "" : "mt-3"}>
     <div className="p-3 fw-bold text-primary">{contactGroup.group}</div>
     <ul className="list-unstyled contact-list">
-      {console.log("contactGroup.children in Contacts.js is:", contactGroup.children)}
+      {/* {console.log("contactGroup.children in Contacts.js is:", contactGroup.children)} */}
 
       {Array.isArray(contactGroup.children) ? (
         // If contactGroup.children is an array, map over it
@@ -207,7 +223,12 @@ class Contacts extends Component {
 
 const mapStateToProps = (state) => {
     const { contacts } = state.Chat;
-    return { contacts };
+    // const { alert } = state.Auth;
+    return { contacts};
 };
 
-export default connect(mapStateToProps, null)(withTranslation()(Contacts));
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({ inviteContact }, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(Contacts));

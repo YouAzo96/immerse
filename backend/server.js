@@ -117,3 +117,10 @@ const verifiedUser = async (token) => {
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+  // You may want to add custom logging or other error handling here
+  process.exit(1);
+});

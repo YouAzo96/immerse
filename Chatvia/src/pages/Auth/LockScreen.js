@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Container, Row, Col, Card, CardBody, FormGroup, Form, Input, Button, FormFeedback, InputGroup, Label } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import { PacmanLoader } from 'react-spinners';
 
 //i18n
 import { useTranslation } from 'react-i18next';
@@ -13,6 +15,8 @@ import logolight from "../../assets/images/logo-light.png";
 import avatar1 from "../../assets/images/users/avatar-1.jpg";
 
 function LockScreen(props) {
+    const dispatch = useDispatch();
+    const { user, loading } = useSelector(state => state.Auth);
 
     /* intilize t variable for multi language implementation */
     const { t } = useTranslation();
@@ -30,11 +34,13 @@ function LockScreen(props) {
         },
     });
 
-    document.title = "Lockscreen | Chatvia React - Responsive Bootstrap 5 Chat App"
-
-
     return (
         <React.Fragment>
+            {loading || !user ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+              <PacmanLoader />
+                </div>
+            ) : (
             <div className="account-pages my-5 pt-sm-5">
             <Container>
                 <Row className="justify-content-center">
@@ -54,8 +60,8 @@ function LockScreen(props) {
                             <CardBody className="p-4">
                                 <div className="p-3">
                                     <div className="user-thumb text-center mb-4">
-                                        <img src={avatar1} className="rounded-circle img-thumbnail avatar-lg" alt="thumbnail" />
-                                        <h5 className="font-size-15 mt-3">{t('Patricia Smith')}</h5>
+                                        <img src={user.image} className="rounded-circle img-thumbnail avatar-lg" alt="thumbnail" />
+                                        <h5 className="font-size-15 mt-3">{t(user.name)}</h5>
                                     </div>
                                     <Form onSubmit={formik.handleSubmit}>
 
@@ -94,12 +100,13 @@ function LockScreen(props) {
 
                         <div className="mt-5 text-center">
                             <p>{t('Not you')} ? {t('return')} <Link to="login" className="font-weight-medium text-primary"> {t('Signin')} </Link> </p>
-                            <p>© {new Date().getFullYear()} {t('Chatvia')}. {t('Crafted with')} <i className="mdi mdi-heart text-danger"></i> {t('by Themesbrand')}</p>
+                            <p>© {new Date().getFullYear()} {t('Immerse')}</p>
                         </div>
                     </Col>
                 </Row>
             </Container>
         </div>
+            )}
         </React.Fragment>
     );
 }

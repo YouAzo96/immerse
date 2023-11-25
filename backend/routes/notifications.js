@@ -49,6 +49,9 @@ const transporter = nodemailer.createTransport(
       user: 'admin@immersechat.online',
       pass: 'Csc400Fall2023',
     },
+    tls: {
+      rejectUnauthorized: false,
+    },
     maxConnections: 10, // Maximum number of simultaneous connections in the pool
   })
 );
@@ -75,6 +78,7 @@ app.post('/notify', async (req, res) => {
             console.error('ContactAdded Event Failed:', error);
           });*/
         break;
+      
       case 'verificationCode':
         //send email
         mailOptions.subject = 'Password Reset Verification Code';
@@ -87,6 +91,7 @@ app.post('/notify', async (req, res) => {
           }
         });
         break;
+      
       case 'userRegistered':
         mailOptions.subject = 'Welcome To Immerse!';
         mailOptions.html = `<!DOCTYPE html>
@@ -117,6 +122,7 @@ app.post('/notify', async (req, res) => {
         });
         break;
 
+      
       case 'passwordChanged':
         mailOptions.subject = 'Password Changed!';
         mailOptions.html = `Your password was changed.\n
@@ -131,6 +137,7 @@ app.post('/notify', async (req, res) => {
         });
         break;
       //send contact invite
+      
       case 'contactInvitation':
         mailOptions.subject = 'New Contact Invitation!';
         mailOptions.html = `<!DOCTYPE html>
@@ -169,6 +176,7 @@ app.post('/notify', async (req, res) => {
           }
         });
         break;
+      
       case 'invite-to-app':
         mailOptions.subject = 'Invitation To New Life [Immerse]!';
         mailOptions.html = `<!DOCTYPE html>
@@ -200,8 +208,8 @@ app.post('/notify', async (req, res) => {
             </style>
         </head>
         <body>
-            <p>Hello dear,</p>
-            <p>${eventData.fromName}, have invited you to join them on Immerse Chat App.</p>
+            <p>Hello There,</p>
+            <p>${eventData.fromName}, has invited you to join them on the Immerse Chat App.</p>
         
             <a href="${frontendServiceUrl}/register/${eventData.senderId}" class="button">Sign Up Now!</a>
         </body>
@@ -210,12 +218,19 @@ app.post('/notify', async (req, res) => {
         transporter.sendMail(mailOptions, (err, info) => {
           if (err) {
             console.error('Error sending email:', err);
+            return res.status(500).json({
+              message: 'Error sending email',
+            });
           } else {
             console.log('Email sent successfully:', info);
+            return res.status(200).json({
+              message: 'Email sent successfully',
+            });
           }
         });
         break;
-      default:
+      
+        default:
         break;
     }
     console.log(`${eventType} event received and handled successfully`);

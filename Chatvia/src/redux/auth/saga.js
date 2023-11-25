@@ -1,5 +1,6 @@
 import { all, call, fork, put, select, takeEvery } from 'redux-saga/effects';
-import { APIClient, setAuthorization } from '../../apis/apiClient';
+import { APIClient, setAuthorization, setupInterceptor } from '../../apis/apiClient';
+import delay from 'redux-saga';
 import {
   LOGIN_USER,
   LOGOUT_USER,
@@ -10,6 +11,9 @@ import {
   API_FAILED,
   UPDATE_USER_PROFILE,
   FETCH_USER_CONTACTS,
+  INVITE_CONTACT,
+  SHOW_ALERT,
+  TRIGGER_ALERT,
 } from './constants';
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
 import {
@@ -22,6 +26,11 @@ import {
   setUserProfile,
   logoutUser,
   setUserContacts,
+  inviteContact,
+  inviteContactSuccess,
+  showAlert,
+  hideAlert,
+  triggerAlert
 } from './actions';
 import {
   getLoggedInUserInfo,
@@ -52,6 +61,7 @@ function* login({ payload: { email, password, history } }) {
     if (response.status === 200) {
       setAuthorization(response.token);
       setLoggedInUser(response.token);
+      setupInterceptor();
 
       yield put(loginUserSuccess(response.token));
     } else {
@@ -72,6 +82,7 @@ function* logout({ payload: { history } }) {
     console.log('logout saga', history);
     yield put(logoutUserSuccess(true));
     localStorage.removeItem('authUser');
+    window.location.reload();
   } catch (error) {
     console.log('Error occured in logout:', error);
     yield put(apiError(error));
@@ -164,17 +175,6 @@ function* fetchUserContacts() {
   }
 }
 
-// handle Api errors
-function* apiErrorHandler({ payload: error }) {
-  try {
-    if (error && error.status === 405 && !isUserAuthenticated()) {
-      yield put(logoutUser());
-    }
-  } catch (error) {
-    console.log('Api Error', error);
-  }
-}
-
 // update the user profile
 function* updateUserProfile(action) {
   console.log('updateUserProfile action is:', action);
@@ -210,6 +210,54 @@ function* updateUserProfile(action) {
     yield put(apiError(error));
   }
 }
+
+// Invite Contact
+function* inviteContacts(action) {
+  try {
+    const token = localStorage.getItem('authUser').replace(/"/g, '');
+    const response = yield call(axios.post, '/users/invite', action.payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // console.log('inviteContact response is:', response);
+    yield put(inviteContactSuccess(response));
+    // yield put(triggerAlert(response.message, 'success'));
+  } catch (error) {
+    console.log('Error in inviteContact:', error);
+    yield put(apiError(error));
+  }
+}
+
+// handle Api errors
+function* apiErrorHandler(error) {
+  try {
+    if (error.payload && error.payload.status === 401 && !isUserAuthenticated()) {
+      yield put(triggerAlert(error.payload.message, 'danger'));
+      yield put(logoutUser());
+    }else {
+      console.log('Error from API Error:', error.payload)
+    }
+  } catch (error) {
+    console.log('Api Error', error);
+  }
+}
+
+function* alertHandler({ payload: { message, color }}) {
+  try {
+    console.log('Alert Handler:', message, color);
+    yield put(showAlert(message, color))
+
+    // yield delay(10000);
+
+    // yield put(hideAlert());
+   
+  } catch (error) {
+    console.log('Alert Error', error);
+    yield put(apiError(error));
+  }
+}
+
 export function* watchLoginUser() {
   yield takeEvery(LOGIN_USER, login);
 }
@@ -244,6 +292,14 @@ export function* watchUpdateUserProfile() {
   yield takeEvery(UPDATE_USER_PROFILE, updateUserProfile);
 }
 
+export function* watchInviteContact() {
+  yield takeEvery(INVITE_CONTACT, inviteContacts);
+}
+
+export function* watchAlert() {
+  yield takeEvery(TRIGGER_ALERT, alertHandler);
+}
+
 function* authSaga() {
   yield all([
     fork(watchCodeSent),
@@ -255,6 +311,8 @@ function* authSaga() {
     fork(watchFetchUserContacts),
     fork(watchApiError),
     fork(watchUpdateUserProfile),
+    fork(watchInviteContact),
+    fork(watchAlert),
   ]);
 }
 

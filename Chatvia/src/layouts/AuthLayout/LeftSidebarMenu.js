@@ -19,10 +19,11 @@ import germany from "../../assets/images/flags/germany.jpg";
 import italy from "../../assets/images/flags/italy.jpg";
 import russia from "../../assets/images/flags/russia.jpg";
 import { createSelector } from 'reselect';
+import { PacmanLoader } from 'react-spinners';
 
 function LeftSidebarMenu(props) {
     const dispatch = useDispatch();
-    const reduxUser = useSelector(state => state.Auth.user);
+    const loggedUser = useSelector(state => state.Auth.user);
     const loading = useSelector(state => state.Auth.loading);
     const effectHasRun = useRef(false);
 
@@ -87,13 +88,13 @@ function LeftSidebarMenu(props) {
         }
       }, [dispatch]);
 
-      if (loading || reduxUser === null) {
-        return <div>Loading...</div>;
-      }
-
     return (
-        // console.log("user in leftsidebar is:", reduxUser),
         <React.Fragment>
+            {loading || !loggedUser ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+              <PacmanLoader />
+                </div>
+            ) : (
             <div className="side-menu flex-lg-column me-lg-1">
                 {/* LOGO */}
                 <div className="navbar-brand-box">
@@ -156,7 +157,7 @@ function LeftSidebarMenu(props) {
                         </UncontrolledTooltip>
                         <Dropdown nav isOpen={dropdownOpenMobile} toggle={toggleMobile} className="profile-user-dropdown d-inline-block d-lg-none dropup">
                             <DropdownToggle nav>
-                                <img src={reduxUser.image} alt="chatvia" className="profile-user rounded-circle" />
+                                <img src={loggedUser.image} alt="chatvia" className="profile-user rounded-circle" />
                             </DropdownToggle>
                             <DropdownMenu className="dropdown-menu-end">
                                 <DropdownItem onClick={() => { toggleTab('profile'); }}>Profile <i className="ri-profile-line float-end text-muted"></i></DropdownItem>
@@ -207,7 +208,7 @@ function LeftSidebarMenu(props) {
                         </li>
                         <Dropdown nav isOpen={dropdownOpen} className="nav-item btn-group dropup profile-user-dropdown" toggle={toggle}>
                             <DropdownToggle className="nav-link mb-2" tag="a">
-                                <img src={reduxUser.image} alt="" className="profile-user rounded-circle" />
+                                <img src={loggedUser.image} alt="" className="profile-user rounded-circle" />
                             </DropdownToggle>
                             <DropdownMenu>
                                 <DropdownItem onClick={() => { toggleTab('profile'); }}>Profile <i className="ri-profile-line float-end text-muted"></i></DropdownItem>
@@ -220,6 +221,7 @@ function LeftSidebarMenu(props) {
                 </div>
                 {/* Side menu user */}
             </div>
+            )}
         </React.Fragment>
     );
 }

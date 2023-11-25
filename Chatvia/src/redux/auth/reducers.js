@@ -13,6 +13,11 @@ import {
   FETCH_USER_CONTACTS,
   FETCH_USER_CONTACTS_SUCCESS,
   FETCH_USER_PROFILE,
+  INVITE_CONTACT,
+  INVITE_CONTACT_SUCCESS,
+  TRIGGER_ALERT,
+  SHOW_ALERT,
+  HIDE_ALERT,
 } from './constants';
 
 const INIT_STATE = {
@@ -23,6 +28,11 @@ const INIT_STATE = {
   isUserLogout: false,
   error: null,
   success: false,
+  alert: {
+    visible: false,
+    message: '',
+    color: 'danger'
+  }
 };
 
 const Auth = (state = INIT_STATE, action) => {
@@ -99,6 +109,40 @@ const Auth = (state = INIT_STATE, action) => {
         }})),
       contactsLoading: false,
       error: null 
+      };
+    
+    case INVITE_CONTACT:
+      return { ...state, loading: true };
+
+    case INVITE_CONTACT_SUCCESS:
+      return { ...state, loading: false, error: null, };
+
+    case SHOW_ALERT:
+      return {
+        ...state,
+        alert: {
+          visible: true,
+          message: action.payload.message,
+          color: action.payload.color
+        }
+      };
+    
+    case HIDE_ALERT:
+      return {
+        ...state,
+        alert: {
+          ...state.alert,
+          visible: false
+        }
+      };
+
+    case TRIGGER_ALERT:
+      return {
+        ...state,
+        alert: {
+          message: action.payload.message,
+          color: action.payload.color
+        }
       };
 
     default: return { ...state };
