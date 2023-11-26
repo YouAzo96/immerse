@@ -5,7 +5,8 @@ import ChatLeftSidebar from "./ChatLeftSidebar";
 import UserChat from "./UserChat/index";
 
 import { connect } from "react-redux";
-import { fetchUserProfile, fetchUserContacts } from '../../redux/auth/actions';
+import { fetchUserProfile } from '../../redux/auth/actions';
+import { fetchUserContacts } from '../../redux/chat/actions';
 import { bindActionCreators } from 'redux';
 
 class Index extends Component {
@@ -41,8 +42,8 @@ class Index extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { users } = state.Chat;
-    const { loading, user, contacts } = state.Auth;
+    const { users, contacts } = state.Chat;
+    const { loading, user } = state.Auth;
     return { users, loading, loggedUser: user, userContacts: contacts };
 };
 

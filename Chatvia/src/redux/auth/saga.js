@@ -10,11 +10,14 @@ import {
   FETCH_USER_PROFILE,
   API_FAILED,
   UPDATE_USER_PROFILE,
-  FETCH_USER_CONTACTS,
-  INVITE_CONTACT,
   SHOW_ALERT,
   TRIGGER_ALERT,
 } from './constants';
+
+import { 
+  FETCH_USER_CONTACTS,
+  INVITE_CONTACT,
+} from '../chat/constants'
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
 import {
   loginUserSuccess,
@@ -25,13 +28,11 @@ import {
   codeSentSuccess,
   setUserProfile,
   logoutUser,
-  setUserContacts,
-  inviteContact,
-  inviteContactSuccess,
   showAlert,
   hideAlert,
   triggerAlert
 } from './actions';
+import { setUserContacts, inviteContactSuccess } from '../chat/actions';
 import {
   getLoggedInUserInfo,
   isUserAuthenticated,

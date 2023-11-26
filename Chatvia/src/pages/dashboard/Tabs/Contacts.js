@@ -4,7 +4,7 @@ import SimpleBar from "simplebar-react";
 import { bindActionCreators } from 'redux';
 
 import { connect } from "react-redux";
-import { inviteContact } from '../../../redux/auth/actions';
+import { inviteContact } from '../../../redux/chat/actions';
 
 import { withTranslation } from 'react-i18next';
 

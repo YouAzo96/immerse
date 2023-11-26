@@ -4,6 +4,10 @@ import {
   FULL_USER,
   ADD_LOGGED_USER,
   CREATE_GROUP,
+  FETCH_USER_CONTACTS,
+  FETCH_USER_CONTACTS_SUCCESS,
+  INVITE_CONTACT,
+  INVITE_CONTACT_SUCCESS,
 } from './constants';
 // Needs major change
 
@@ -391,28 +395,7 @@ const INIT_STATE = {
     //     ]
     // },
   ],
-  contacts: [
-    // { id : 1, name : "Albert Rodarte" },
-    // { id : 2, name : "Allison Etter" },
-    // { id : 3, name : "Craig Smiley" },
-    // { id : 4, name : "Daniel Clay" },
-    // { id : 5, name : "Doris Brown" },
-    // { id : 6, name : "Iris Wells" },
-    // { id : 7, name : "Juan Flakes" },
-    // { id : 8, name : "John Hall" },
-    // { id : 9, name : "Joy Southern" },
-    // { id : 10, name : "Mary Farmer" },
-    // { id : 11, name : "Mark Messer" },
-    // { id : 12, name : "Michael Hinton" },
-    // { id : 13, name : "Ossie Wilson" },
-    // { id : 14, name : "Phillis Griffin" },
-    // { id : 15, name : "Paul Haynes" },
-    // { id : 16, name : "Rocky Jackson" },
-    // { id : 17, name : "Sara Muller" },
-    // { id : 18, name : "Simon Velez" },
-    // { id : 19, name : "Steve Walker" },
-    // { id : 20, name : "Hanah Mile" },
-  ],
+  contacts: null,
 };
 
 const Chat = (state = INIT_STATE, action) => {
@@ -445,6 +428,28 @@ const Chat = (state = INIT_STATE, action) => {
         ...state,
         groups: [...state.groups, newGroup],
       };
+
+    case FETCH_USER_CONTACTS:
+      return { ...state, contactsLoading: true };    
+
+    case FETCH_USER_CONTACTS_SUCCESS:
+      return { ...state, contacts: action.payload.map(contact => ({
+        group: contact.fname[0].toUpperCase(),
+        children: {
+        name: contact.fname + " " + contact.lname,
+        email: contact.email,
+        about: contact.about,
+        image: contact.image,
+        }})),
+      contactsLoading: false,
+      error: null 
+      };
+    
+    case INVITE_CONTACT:
+      return { ...state, loading: true };
+
+    case INVITE_CONTACT_SUCCESS:
+      return { ...state, loading: false, error: null, };
 
     default:
       return { ...state };
