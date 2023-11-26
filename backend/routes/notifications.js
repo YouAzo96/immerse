@@ -78,7 +78,7 @@ app.post('/notify', async (req, res) => {
             console.error('ContactAdded Event Failed:', error);
           });*/
         break;
-      
+
       case 'verificationCode':
         //send email
         mailOptions.subject = 'Password Reset Verification Code';
@@ -91,7 +91,7 @@ app.post('/notify', async (req, res) => {
           }
         });
         break;
-      
+
       case 'userRegistered':
         mailOptions.subject = 'Welcome To Immerse!';
         mailOptions.html = `<!DOCTYPE html>
@@ -122,7 +122,6 @@ app.post('/notify', async (req, res) => {
         });
         break;
 
-      
       case 'passwordChanged':
         mailOptions.subject = 'Password Changed!';
         mailOptions.html = `Your password was changed.\n
@@ -137,7 +136,7 @@ app.post('/notify', async (req, res) => {
         });
         break;
       //send contact invite
-      
+
       case 'contactInvitation':
         mailOptions.subject = 'New Contact Invitation!';
         mailOptions.html = `<!DOCTYPE html>
@@ -154,10 +153,10 @@ app.post('/notify', async (req, res) => {
                 <table>
                     <tr>
                         <td style="padding: 10px;">
-                            <a href="${usersServiceUrl}/accept-contact/${eventData.senderId}/${eventData.receiverId}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px;">Accept</a>
+                            <a href="${gatewayServiceUrl}/api/users/accept-contact/${eventData.senderId}/${eventData.receiverId}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px;">Accept</a>
                         </td>
                         <td style="padding: 10px;">
-                            <a href="${usersServiceUrl}/refuse-contact/${eventData.senderId}/${eventData.receiverId}" style="display: inline-block; padding: 10px 20px; background-color: #f44336; color: #fff; text-decoration: none; border-radius: 5px;">Refuse</a>
+                            <a href="${gatewayServiceUrl}/api/users/refuse-contact/${eventData.senderId}/${eventData.receiverId}" style="display: inline-block; padding: 10px 20px; background-color: #f44336; color: #fff; text-decoration: none; border-radius: 5px;">Refuse</a>
                         </td>
                     </tr>
                 </table>
@@ -176,7 +175,7 @@ app.post('/notify', async (req, res) => {
           }
         });
         break;
-      
+
       case 'invite-to-app':
         mailOptions.subject = 'Invitation To New Life [Immerse]!';
         mailOptions.html = `<!DOCTYPE html>
@@ -229,8 +228,8 @@ app.post('/notify', async (req, res) => {
           }
         });
         break;
-      
-        default:
+
+      default:
         break;
     }
     console.log(`${eventType} event received and handled successfully`);

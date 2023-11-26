@@ -95,7 +95,13 @@ const Chat = (state = INIT_STATE, action) => {
       };
 
     case ADD_LOGGED_USER:
-      console.log('Action Payload:' + JSON.stringify(action.payload));
+      const currentUsers = state.users;
+      const isUserExistInConversations = currentUsers.findIndex(
+        (usr) => usr.id === action.payload.id
+      );
+      if (isUserExistInConversations !== -1) {
+        return { ...state };
+      }
       return {
         ...state,
         users: [...state.users, action.payload],
