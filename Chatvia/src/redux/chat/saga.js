@@ -85,7 +85,12 @@ function* handleActiveUser(action) {
 function* handleAddLoggedUser(action) {
   try {
     const user = action.payload;
-    //yield put(activeUser(user.id)); //just open their conversation
+    //user.user_id=31
+    //id=1,
+    const users = yield select((state) => state.Chat.users);
+    console.log('Users: ', users);
+    const newUserId = users.findIndex((item) => item.id === user.id);
+    yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
   } catch (error) {
     console.error('Error in handleAddLoggedUser saga:', error);
