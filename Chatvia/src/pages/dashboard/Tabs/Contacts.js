@@ -7,6 +7,7 @@ import { connect } from "react-redux";
 import { inviteContact } from '../../../redux/auth/actions';
 
 import { withTranslation } from 'react-i18next';
+import { addLoggedinUser } from '../../../redux/actions';
 
 //use sortedContacts variable as global variable to sort contacts
 let sortedContacts = [
@@ -109,17 +110,20 @@ class Contacts extends Component {
     }
 
     handleInviteClick = () => {
-      // const email = document.getElementById("addcontactemail-input").value;
-      // const message = document.getElementById("addcontact-invitemessage-input").value;
-      const email = "jakecruz889@gmail.com"
-      const message = "Hello, I would like to add you as a contact on Immerse: Real-Time Chat App"
+       const email = document.getElementById("addcontactemail-input").value;
+       const message = document.getElementById("addcontact-invitemessage-input").value;
       this.props.inviteContact(email, message);
     }
+
+    handleContactClick = (userId) => {
+    //  this.props.addLoggedinUser(userId);
+      this.props.addLoggedinUser(31);
+
+    };
 
     render() {
         const { alert } = this.state;
         const filteredContacts = this.filterContacts();
-        console.log("contacts in filterContacts are:", this.state);
         const { t } = this.props;
         return (
             <React.Fragment>
@@ -161,7 +165,7 @@ class Contacts extends Component {
                             </ModalFooter>
                         </Modal>
                         {/* End Add contact Modal */}
-
+                        {/* Start search-box */}
                         <div className="search-box chat-search-box">
                             <InputGroup size="lg" className="bg-light rounded-lg">
                                 <Button color="link" className="text-decoration-none text-muted pr-1" type="button">
@@ -181,39 +185,43 @@ class Contacts extends Component {
                     {/* {this.state.alert.visible && <Alert color={this.state.alert.color}>{this.state.alert.message}</Alert>} */}
                     {/* Start contact lists */}
                     <SimpleBar style={{ maxHeight: "100%" }} id="chat-room" className="p-4 chat-message-list chat-group-list">
-                    {filteredContacts.map((contactGroup, key) => (
-  <div key={key} className={key + 1 === 1 ? "" : "mt-3"}>
-    <div className="p-3 fw-bold text-primary">{contactGroup.group}</div>
-    <ul className="list-unstyled contact-list">
-      {/* {console.log("contactGroup.children in Contacts.js is:", contactGroup.children)} */}
 
-      {Array.isArray(contactGroup.children) ? (
-        // If contactGroup.children is an array, map over it
-        contactGroup.children.map((contact, childKey) => (
-          <li key={childKey}>
-            <div className="d-flex align-items-center">
-              <div className="flex-grow-1">
-                <h5 className="font-size-14 m-0">{contact.name}</h5>
-              </div>
-              {/* ... (dropdown and other actions) */}
-            </div>
-          </li>
-        ))
-      ) : (
-        // If contactGroup.children is not an array, render a single item
-        <li>
-          <div className="d-flex align-items-center">
-            <div className="flex-grow-1">
-              <h5 className="font-size-14 m-0">{contactGroup.children.name}</h5>
-            </div>
-            {/* ... (dropdown and other actions) */}
-          </div>
-        </li>
-      )}
-    </ul>
-  </div>
-))}
-                            </SimpleBar>
+                        {
+                            sortedContacts.map((contact, key) =>
+                                <div key={key} className={key + 1 === 1 ? "" : "mt-3"}>
+                                    <div className="p-3 fw-bold text-primary">
+                                        {contact.group}
+                                    </div>
+
+                                    <ul className="list-unstyled contact-list">
+                                        {
+                                            contact.children.map((child, key) =>
+                                                
+                                                <li key={key} >
+                                                    <div className="d-flex align-items-center">
+                                                        <div className="flex-grow-1">
+                                                            <h5 className="font-size-14 m-0" onClick={() => this.handleContactClick(child.user_id)}>{child.name}</h5>
+                                                        </div>
+                                                        <UncontrolledDropdown>
+                                                            <DropdownToggle tag="a" className="text-muted">
+                                                                <i className="ri-more-2-fill"></i>
+                                                            </DropdownToggle>
+                                                            <DropdownMenu className="dropdown-menu-end">
+                                                                <DropdownItem>{t('Share')} <i className="ri-share-line float-end text-muted"></i></DropdownItem>
+                                                                <DropdownItem>{t('Block')} <i className="ri-forbid-line float-end text-muted"></i></DropdownItem>
+                                                                <DropdownItem>{t('Remove')} <i className="ri-delete-bin-line float-end text-muted"></i></DropdownItem>
+                                                            </DropdownMenu>
+                                                        </UncontrolledDropdown>
+                                                    </div>
+                                                </li>
+                                            )
+                                        }
+                                    </ul>
+                                </div>
+                            )
+                        }
+
+                    </SimpleBar>
                     {/* end contact lists */}
                 </div>
             </React.Fragment>
@@ -223,12 +231,13 @@ class Contacts extends Component {
 
 const mapStateToProps = (state) => {
     const { contacts } = state.Chat;
-    // const { alert } = state.Auth;
+     //const { authcontacts } = state.Auth;
+   // console.log("contacts from Jancel: "+ JSON.stringify(authcontacts));
     return { contacts};
 };
 
 const mapDispatchToProps = (dispatch) => {
-    return bindActionCreators({ inviteContact }, dispatch);
+    return bindActionCreators({ inviteContact, addLoggedinUser }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withTranslation()(Contacts));

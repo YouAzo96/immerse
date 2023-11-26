@@ -14,7 +14,7 @@ import avatar6 from '../../../assets/images/users/avatar-6.jpg';
 const OnlineUsers = () => {
   const responsive = {
     0: { items: 4 },
-    1024: { items: 4 },
+    1024: { items: 5 },
   };
   return (
     <React.Fragment>
@@ -30,14 +30,14 @@ const OnlineUsers = () => {
             <Link to="#" className="user-status-box">
               <div className="avatar-xs mx-auto d-block chat-user-img online">
                 <img
-                  src={avatar2}
+                  src={''}
                   alt="user-img"
                   className="img-fluid rounded-circle"
                 />
                 <span className="user-status"></span>
               </div>
 
-              <h5 className="font-size-13 text-truncate mt-3 mb-1">Patrick</h5>
+              <h5 className="font-size-13 text-truncate mt-3 mb-1">{}</h5>
             </Link>
           </div>
         </AliceCarousel>

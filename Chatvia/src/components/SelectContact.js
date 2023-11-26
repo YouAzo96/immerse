@@ -48,6 +48,7 @@ class SelectContact extends Component {
         let result = Object.values(data);
         this.setState({ contacts: result });
         sortedContacts = result;
+        console.log("Sorted Coontacts:"+ sortedContacts);
         return result;
     }
 

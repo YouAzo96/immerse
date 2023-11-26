@@ -102,6 +102,7 @@ const Auth = (state = INIT_STATE, action) => {
       return { ...state, contacts: action.payload.map(contact => ({
         group: contact.fname[0].toUpperCase(),
         children: {
+        user_id:contact.user_id,
         name: contact.fname + " " + contact.lname,
         email: contact.email,
         about: contact.about,

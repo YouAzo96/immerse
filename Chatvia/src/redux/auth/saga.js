@@ -164,6 +164,7 @@ function* fetchUserContacts() {
     });
 
     // Assuming response is an array of contacts
+    console.log("User Contacts: "+ JSON.stringify(response));
     const contacts = response.map((contact) => ({
       ...contact,
       image: contact.image ? contact.image : defaultImage,

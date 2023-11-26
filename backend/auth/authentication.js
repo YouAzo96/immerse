@@ -43,7 +43,7 @@ app.post('/auth', async (req, res) => {
     },
     secretKey,
     {
-      expiresIn: '10s',
+      expiresIn: '10h',
     }
   );
 
