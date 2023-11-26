@@ -9,7 +9,12 @@ const app = express();
 const port = 3002;
 
 // Create a MySQL connection
-const db = mysql.createConnection(dbConfig);
+const db = mysql.createPool({
+  ...dbConfig,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 app.use(bodyParser.json());
 

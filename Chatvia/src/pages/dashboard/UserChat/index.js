@@ -48,6 +48,7 @@ function UserChat(props) {
   //demo conversation messages
   //userType must be required
   const [allUsers] = useState(props.recentChatList);
+  console.log('all users in index: ' + JSON.stringify(allUsers));
   const [chatMessages, setchatMessages] = useState(
     props.recentChatList[props.active_user].messages
   );

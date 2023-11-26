@@ -17,12 +17,16 @@ import {
   InputGroup,
 } from 'reactstrap';
 import SimpleBar from 'simplebar-react';
-import { bindActionCreators } from 'redux';
-
+import { select } from 'redux-saga/effects';
 import { connect } from 'react-redux';
-import { inviteContact, addLoggedinUser } from '../../../redux/chat/actions';
-
+import {
+  inviteContact,
+  addLoggedinUser,
+  activeUser,
+} from '../../../redux/chat/actions';
+import { setActiveTab } from '../../../redux/layout/actions';
 import { withTranslation } from 'react-i18next';
+
 //use sortedContacts variable as global variable to sort contacts
 let sortedContacts = [
   {
@@ -38,11 +42,6 @@ class Contacts extends Component {
       searchTerm: '',
       modal: false,
       contacts: this.props.contactList || [],
-      //   alert: {
-      //     visible: this.props.alert.visible,
-      //     message: this.props.alert.message,
-      //     color: this.props.alert.color
-      // }
     };
     this.toggle = this.toggle.bind(this);
     this.sortContact = this.sortContact.bind(this);
@@ -127,11 +126,29 @@ class Contacts extends Component {
     const message = document.getElementById(
       'addcontact-invitemessage-input'
     ).value;
-    this.props.inviteContactDispatch(email, message);
+    this.props.inviteContact(email, message);
   };
 
   handleContactClick = (userId) => {
-    this.props.addLoggedinUserDispatch(userId);
+    // Get Current ContactsList from state:
+    const contact = this.props.contacts.find(
+      (item) => item.children.user_id === userId
+    );
+
+    const newUser = {
+      id: contact.children.user_id,
+      name: contact.children.name,
+      email: contact.children.email,
+      about: contact.children.about,
+      profilePicture: contact.children.image,
+      status: 'online',
+      unRead: 0,
+      roomType: 'contact',
+      isGroup: false,
+      messages: [],
+    };
+
+    this.props.addLoggedinUser(newUser);
   };
 
   render() {
@@ -296,19 +313,13 @@ class Contacts extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const { contacts } = state.Chat.contacts;
+  const { contacts } = state.Chat;
   return { contacts };
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    inviteContactDispatch: (email, message) =>
-      dispatch(inviteContact(email, message)),
-    addLoggedinUserDispatch: (userId) => dispatch(addLoggedinUser(userId)),
-  };
-};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withTranslation()(Contacts));
+export default connect(mapStateToProps, {
+  addLoggedinUser,
+  inviteContact,
+  setActiveTab,
+  activeUser,
+})(withTranslation()(Contacts));

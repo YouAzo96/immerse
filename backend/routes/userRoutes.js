@@ -117,10 +117,10 @@ router.post('/invite', async (req, res) => {
     if (!isValidUser) {
       return res.status(401).json({ error: 'Invalid or Expired Token' });
     }
-  const refereeEmail = req.body.refereeEmail;
-  if (!refereeEmail)
-    return res.status(405).json({ error: 'Missing Param [referee email]' });
-    console.log('Invite API called', req.body)
+    const refereeEmail = req.body.refereeEmail;
+    if (!refereeEmail)
+      return res.status(405).json({ error: 'Missing Param [referee email]' });
+    console.log('Invite API called', req.body);
     //check if user exist:
     const [referee, fields] = await db
       .promise()
@@ -143,22 +143,28 @@ router.post('/invite', async (req, res) => {
         senderId: isValidUser.user_id,
         receiverId: referee[0].user_id,
       });
-      return res.status(200).json({ message: 'Invitation Sent', color : 'success' });
+      return res
+        .status(200)
+        .json({ message: 'Invitation Sent', color: 'success' });
     } else {
       emitter.emit('invite-to-app', {
         email: refereeEmail,
         fromName: isValidUser.fname + ' ' + isValidUser.lname,
         senderId: isValidUser.user_id,
       });
-      return res.status(200).json({ message: 'Invitation Sent', color : 'success' });
+      return res
+        .status(200)
+        .json({ message: 'Invitation Sent', color: 'success' });
     }
   } catch (error) {
     console.log('Internal Server Error: ' + error);
-    return res.status(500).json({ error: 'Internal Server Error: ' + error, color : 'danger' });
+    return res
+      .status(500)
+      .json({ error: 'Internal Server Error: ' + error, color: 'danger' });
   }
 });
 
-router.post('/accept-contact/:sender/:receiver', async (req, res) => {
+router.get('/accept-contact/:sender/:receiver', async (req, res) => {
   const sender = req.params.sender;
   const receiver = req.params.receiver;
 
@@ -194,7 +200,7 @@ router.post('/accept-contact/:sender/:receiver', async (req, res) => {
     .json({ message: 'Invitation Accepted, Contact Added!' });
 });
 
-router.post('/refuse-contact/:sender/:receiver', async (req, res) => {
+router.get('/refuse-contact/:sender/:receiver', async (req, res) => {
   const sender = req.params.sender;
   const receiver = req.params.receiver;
 
@@ -294,7 +300,9 @@ router.get('/me', async (req, res) => {
     }
     const user = await db
       .promise()
-      .query('SELECT about,image FROM User WHERE email = ?', [isValidUser.email]);
+      .query('SELECT about,image FROM User WHERE email = ?', [
+        isValidUser.email,
+      ]);
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -317,7 +325,6 @@ router.get('/me', async (req, res) => {
     return res.status(error.status || 500).json({ error });
   }
 });
-
 
 //Get Contacts
 router.get('/contacts', async (req, res) => {
@@ -419,7 +426,6 @@ const verifiedUser = async (req) => {
     }
   }
 };
-
 
 const generateVerificationCode = () => {
   const code = crypto.randomBytes(2).toString('hex'); // Generate a 4-digit code

@@ -84,39 +84,9 @@ function* handleActiveUser(action) {
 
 function* handleAddLoggedUser(action) {
   try {
-    const user_id = action.payload;
-    // Get Current ContactsList from state:
-    const contacts = yield select((state) => state.Chat.contacts);
-
-    const contact = contacts.find((item) => item.children.user_id === user_id);
-
-    const users = yield select((state) => state.Chat.users);
-    //check if we have an existing conversation with them:
-    const isUserExistInConversations = users.find((usr) => usr.id === user_id);
-    if (isUserExistInConversations) {
-      return (
-        yield put(setActiveTab('chat')), //move to chats tab
-        yield put(activeUser(user_id)) //just open their conversation
-      );
-    }
-
-    console.log('Contact Found: ' + JSON.stringify(contact));
-    //create new user from contact and open conversation with them.
-    if (contact) {
-      const newUser = {
-        id: contact.children.user_id,
-        name: contact.children.name,
-        profilePicture: contact.children.image,
-        status: 'online',
-        unRead: 0,
-        roomType: 'contact',
-        isGroup: false,
-        messages: [],
-      };
-
-      yield put(addLoggedinUser(newUser));
-      yield put(activeUser(user_id));
-    }
+    const user = action.payload;
+    //yield put(activeUser(user.id)); //just open their conversation
+    yield put(setActiveTab('chat')); //move to chats tab
   } catch (error) {
     console.error('Error in handleAddLoggedUser saga:', error);
   }
