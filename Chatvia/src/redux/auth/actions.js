@@ -13,10 +13,6 @@ import {
   CODE_SENT,
   CODE_SENT_SUCCESS,
   UPDATE_USER_PROFILE,
-  FETCH_USER_CONTACTS,
-  FETCH_USER_CONTACTS_SUCCESS,
-  INVITE_CONTACT,
-  INVITE_CONTACT_SUCCESS,
   SHOW_ALERT,
   HIDE_ALERT,
   TRIGGER_ALERT,
@@ -90,26 +86,6 @@ export const setUserProfile = (user) => ({
 export const updateUserProfile = (user) => ({
   type: UPDATE_USER_PROFILE,
   payload: user,
-});
-
-export const fetchUserContacts = () => ({
-  type: FETCH_USER_CONTACTS,
-  payload: {},
-});
-
-export const setUserContacts = (contacts) => ({
-  type: FETCH_USER_CONTACTS_SUCCESS,
-  payload: contacts,
-});
-
-export const inviteContact = (email, message) => ({
-  type: INVITE_CONTACT,
-  payload: {refereeEmail: email, message: message},
-});
-
-export const inviteContactSuccess = (contact) => ({
-  type: INVITE_CONTACT_SUCCESS,
-  payload: contact,
 });
 
 export const showAlert = (message, color) => ({

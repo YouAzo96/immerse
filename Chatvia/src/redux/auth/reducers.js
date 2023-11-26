@@ -10,11 +10,7 @@ import {
   FETCH_USER_PROFILE_SUCCESS,
   CODE_SENT,
   CODE_SENT_SUCCESS,
-  FETCH_USER_CONTACTS,
-  FETCH_USER_CONTACTS_SUCCESS,
   FETCH_USER_PROFILE,
-  INVITE_CONTACT,
-  INVITE_CONTACT_SUCCESS,
   TRIGGER_ALERT,
   SHOW_ALERT,
   HIDE_ALERT,
@@ -22,7 +18,6 @@ import {
 
 const INIT_STATE = {
   user: null,
-  contacts: null,
   contactsLoading: false,
   loading: false,
   isUserLogout: false,
@@ -85,6 +80,7 @@ const Auth = (state = INIT_STATE, action) => {
     case FETCH_USER_PROFILE_SUCCESS:
         return { ...state,
               user: {
+                user_id:action.payload.user_id,
                 fname: action.payload.fname,
                 lname: action.payload.lname,
                 email: action.payload.email,
@@ -94,30 +90,6 @@ const Auth = (state = INIT_STATE, action) => {
              loading: false, 
              error: null
         };
-
-    case FETCH_USER_CONTACTS:
-      return { ...state, contactsLoading: true };    
-
-    case FETCH_USER_CONTACTS_SUCCESS:
-      return { ...state, contacts: action.payload.map(contact => ({
-        group: contact.fname[0].toUpperCase(),
-        children: {
-        user_id:contact.user_id,
-        name: contact.fname + " " + contact.lname,
-        email: contact.email,
-        about: contact.about,
-        image: contact.image,
-        }})),
-      contactsLoading: false,
-      error: null 
-      };
-    
-    case INVITE_CONTACT:
-      return { ...state, loading: true };
-
-    case INVITE_CONTACT_SUCCESS:
-      return { ...state, loading: false, error: null, };
-
     case SHOW_ALERT:
       return {
         ...state,
