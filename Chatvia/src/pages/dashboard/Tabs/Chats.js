@@ -77,9 +77,6 @@ class Chats extends Component {
 
     //find index of current chat in array
     var index = this.props.recentChatList.indexOf(chat);
-    console.log(
-      'Current Chat: ' + JSON.stringify(this.props.recentChatList[index])
-    );
     // set activeUser
     this.props.activeUser(index);
 

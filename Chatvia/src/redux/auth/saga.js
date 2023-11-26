@@ -1,6 +1,9 @@
 import { all, call, fork, put, select, takeEvery } from 'redux-saga/effects';
-import { APIClient, setAuthorization, setupInterceptor } from '../../apis/apiClient';
-import delay from 'redux-saga';
+import {
+  APIClient,
+  setAuthorization,
+  setupInterceptor,
+} from '../../apis/apiClient';
 import {
   LOGIN_USER,
   LOGOUT_USER,
@@ -10,15 +13,11 @@ import {
   FETCH_USER_PROFILE,
   API_FAILED,
   UPDATE_USER_PROFILE,
-  SHOW_ALERT,
   TRIGGER_ALERT,
 } from './constants';
 
-import { 
-  FETCH_USER_CONTACTS,
-  INVITE_CONTACT,
-} from '../chat/constants'
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
+
 import {
   loginUserSuccess,
   registerUserSuccess,
@@ -30,14 +29,14 @@ import {
   logoutUser,
   showAlert,
   hideAlert,
-  triggerAlert
+  triggerAlert,
 } from './actions';
-import { setUserContacts, inviteContactSuccess } from '../chat/actions';
 import {
   getLoggedInUserInfo,
   isUserAuthenticated,
   setLoggedInUser,
 } from '../../helpers/authUtils';
+
 import axios from 'axios';
 import isEqual from 'lodash/isEqual';
 
@@ -154,29 +153,6 @@ function* fetchUserProfile() {
   }
 }
 
-// fetch the contacts for the user
-function* fetchUserContacts() {
-  try {
-    const token = localStorage.getItem('authUser').replace(/"/g, '');
-    const response = yield call(get, 'users/contacts', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    // Assuming response is an array of contacts
-    console.log("User Contacts: "+ JSON.stringify(response));
-    const contacts = response.map((contact) => ({
-      ...contact,
-      image: contact.image ? contact.image : defaultImage,
-    }));
-
-    yield put(setUserContacts(contacts));
-  } catch (error) {
-    yield put(apiError(error));
-  }
-}
-
 // update the user profile
 function* updateUserProfile(action) {
   console.log('updateUserProfile action is:', action);
@@ -213,47 +189,32 @@ function* updateUserProfile(action) {
   }
 }
 
-// Invite Contact
-function* inviteContacts(action) {
-  try {
-    const token = localStorage.getItem('authUser').replace(/"/g, '');
-    const response = yield call(axios.post, '/users/invite', action.payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    // console.log('inviteContact response is:', response);
-    yield put(inviteContactSuccess(response));
-    // yield put(triggerAlert(response.message, 'success'));
-  } catch (error) {
-    console.log('Error in inviteContact:', error);
-    yield put(apiError(error));
-  }
-}
-
 // handle Api errors
 function* apiErrorHandler(error) {
   try {
-    if (error.payload && error.payload.status === 401 && !isUserAuthenticated()) {
+    if (
+      error.payload &&
+      error.payload.status === 401 &&
+      !isUserAuthenticated()
+    ) {
       yield put(triggerAlert(error.payload.message, 'danger'));
       yield put(logoutUser());
-    }else {
-      console.log('Error from API Error:', error.payload)
+    } else {
+      console.log('Error from API Error:', error.payload);
     }
   } catch (error) {
     console.log('Api Error', error);
   }
 }
 
-function* alertHandler({ payload: { message, color }}) {
+function* alertHandler({ payload: { message, color } }) {
   try {
     console.log('Alert Handler:', message, color);
-    yield put(showAlert(message, color))
+    yield put(showAlert(message, color));
 
     // yield delay(10000);
 
     // yield put(hideAlert());
-   
   } catch (error) {
     console.log('Alert Error', error);
     yield put(apiError(error));
@@ -282,20 +243,12 @@ export function* watchFetchUserProfile() {
   yield takeEvery(FETCH_USER_PROFILE, fetchUserProfile);
 }
 
-export function* watchFetchUserContacts() {
-  yield takeEvery(FETCH_USER_CONTACTS, fetchUserContacts);
-}
-
 export function* watchApiError() {
   yield takeEvery(API_FAILED, apiErrorHandler);
 }
 
 export function* watchUpdateUserProfile() {
   yield takeEvery(UPDATE_USER_PROFILE, updateUserProfile);
-}
-
-export function* watchInviteContact() {
-  yield takeEvery(INVITE_CONTACT, inviteContacts);
 }
 
 export function* watchAlert() {
@@ -310,10 +263,8 @@ function* authSaga() {
     fork(watchRegisterUser),
     fork(watchForgetPassword),
     fork(watchFetchUserProfile),
-    fork(watchFetchUserContacts),
     fork(watchApiError),
     fork(watchUpdateUserProfile),
-    fork(watchInviteContact),
     fork(watchAlert),
   ]);
 }

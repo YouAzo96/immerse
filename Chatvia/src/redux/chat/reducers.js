@@ -12,63 +12,66 @@ import {
 // Needs major change
 
 //Import Images
-import blankuser from '../../assets/images/users/blankuser.jpeg';
- import avatar2 from '../../assets/images/users/avatar-2.jpg';
- import avatar8 from '../../assets/images/users/avatar-8.jpg';
- import img4 from '../../assets/images/small/img-4.jpg';
- import img7 from '../../assets/images/small/img-7.jpg';
+import avatar2 from '../../assets/images/users/avatar-2.jpg';
 
 const INIT_STATE = {
- 
-  // users: [
-  //   {
-  //     id: 0,
-  //     name: null,
-  //     profilePicture: blankuser || null,
-  //     status: 'active',
-  //     unRead: 0,
-  //     roomType: null,
-  //     isGroup: null,
-  //     messages: [
-  //       {
-  //         id: -1,
-  //         message: null,
-  //         time: null,
-  //         userType: 'sender',
-  //         isImageMessage: false,
-  //         isFileMessage: false,
-  //         imageMessage: null,
-  //         fileMessage: null,
-  //       },
-  //     ],
-  //   },
-  // ],
+  // Message structure:
+  //  {
+  //   id: 1,
+  //   message: 'hi',
+  //   time: '00:1',
+  //   userType: 'sender',
+  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
+  //   isFileMessage: false,
+  //   isImageMessage: false
+  // },
+  // {
+  //   id: 2,
+  //   message: 'image',
+  //   imageMessage: [
+  //     {
+  //       image: 'blob:http://localhost:3000/597cfcf4-1e71-45e1-9bf8-60874ded50a6'
+  //     }
+  //   ],
+  //   time: '00:31',
+  //   userType: 'sender',
+  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
+  //   isImageMessage: true,
+  //   isFileMessage: false
+  // },
+  // {
+  //   id: 3,
+  //   message: 'file',
+  //   fileMessage: 'WIN_20210928_19_09_35_Pro.jpg',
+  //   size: 117114,
+  //   time: '00:21',
+  //   userType: 'sender',
+  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
+  //   isFileMessage: true,
+  //   isImageMessage: false
+  // }
   active_user: 0,
   users: [
-    { id : 0, name : "Patrick Hendricks", profilePicture : avatar2, status : "online", unRead : 0, roomType : "contact", isGroup: false,
-        messages: [
-            { id: 1, message: "hi", time: "01:05", userType: "receiver", isImageMessage : false, isFileMessage : false },
-            { id: 2, message: "hi patrick", time: "10.00", userType: "sender", isImageMessage : false, isFileMessage : false },
-            { id: 3, message: "how's going on your project?", time: "01:05", userType: "receiver", isImageMessage : false, isFileMessage : false },
-            { id: 4, message: "Do you need any help?", time: "01:06", userType: "receiver", isImageMessage : false, isFileMessage : false },
-            { id : 33, isToday : true },
-            { id: 5, message: "Let me know?", time: "01:06", userType: "receiver", isImageMessage : false, isFileMessage : false },
-            { id: 6, message: "hi...Good Morning!", time: "09:05", userType: "sender", isImageMessage : false, isFileMessage : false },
-            { id: 7, message: "Image", time: "10:30", userType: "receiver", isImageMessage : true, isFileMessage : false, imageMessage : [ { image : img4 }, { image : img7 } ] },
-            { id: 8, message: "please, save this pictures to your file and give it to me after you have done with editing!", time: "10:31", userType: "receiver", isImageMessage : false, isFileMessage : false },
-            { id: 9, message: "hey! there I'm available", time: "02:50 PM", userType: "sender", isImageMessage : false, isFileMessage : false },
-    ] },
-    { id : 1, name : "Youssef Azougagh", profilePicture : avatar2, status : "online", unRead : 0, roomType : "contact", isGroup: false,
-        messages: [
-
-        ] }
+    {
+      id: 0,
+      name: 'Patrick Hendricks',
+      profilePicture: avatar2,
+      status: 'online',
+      unRead: 0,
+      roomType: 'contact',
+      isGroup: false,
+      messages: [],
+    },
   ],
   groups: [
-    { gourpId : 1, name : "#General", profilePicture : "Null", isGroup : true, unRead : 0, desc : "General Group",
-        members : [
-            { userId : 1, name : "Sara Muller", profilePicture : "Null", role : null },
-            { userId : 2, name : "Ossie Wilson", profilePicture : avatar8, role : "admin" },
-        ]
+    {
+      gourpId: 1,
+      name: '#General',
+      profilePicture: 'Null',
+      isGroup: true,
+      unRead: 0,
+      desc: 'General Group',
+      members: null,
     },
   ],
   contacts: null,
@@ -92,10 +95,10 @@ const Chat = (state = INIT_STATE, action) => {
       };
 
     case ADD_LOGGED_USER:
-      const newUser = action.payload;
+      console.log('Action Payload:' + JSON.stringify(action.payload));
       return {
         ...state,
-        users: [...state.users, newUser],
+        users: [...state.users, action.payload],
       };
 
     case CREATE_GROUP:
@@ -106,26 +109,30 @@ const Chat = (state = INIT_STATE, action) => {
       };
 
     case FETCH_USER_CONTACTS:
-      return { ...state, contactsLoading: true };    
+      return { ...state, contactsLoading: true };
 
     case FETCH_USER_CONTACTS_SUCCESS:
-      return { ...state, contacts: action.payload.map(contact => ({
-        group: contact.fname[0].toUpperCase(),
-        children: {
-        name: contact.fname + " " + contact.lname,
-        email: contact.email,
-        about: contact.about,
-        image: contact.image,
-        }})),
-      contactsLoading: false,
-      error: null 
+      return {
+        ...state,
+        contacts: action.payload.map((contact) => ({
+          group: contact.fname[0].toUpperCase(),
+          children: {
+            user_id: contact.user_id,
+            name: contact.fname + ' ' + contact.lname,
+            email: contact.email,
+            about: contact.about,
+            image: contact.image,
+          },
+        })),
+        contactsLoading: false,
+        error: null,
       };
-    
+
     case INVITE_CONTACT:
       return { ...state, loading: true };
 
     case INVITE_CONTACT_SUCCESS:
-      return { ...state, loading: false, error: null, };
+      return { ...state, loading: false, error: null };
 
     default:
       return { ...state };
