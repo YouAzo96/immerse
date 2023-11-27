@@ -72,7 +72,7 @@ function* handleChatUser(action) {
     console.log('local', local);
 
     if (!local) {
-      
+      yield put(updateUserList());
     } else {
     yield put(updateUserList(local));
     }
@@ -97,6 +97,7 @@ function* handleAddLoggedUser(action) {
     const users = yield select((state) => state.Chat.users);
     console.log('Users: ', users);
     if (users[0].name === null) {
+      console.log('Removing default user');
       //remove the default user
       users.splice(0, 1);
     }

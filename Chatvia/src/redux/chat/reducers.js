@@ -51,17 +51,24 @@ const INIT_STATE = {
     },
   ],
   contacts: null,
+  contactsLoading: false,
+  chatLoading: false,
 };
 
 const Chat = (state = INIT_STATE, action) => {
   switch (action.type) {
     case CHAT_USER:
-      return { ...state };
+      return { ...state, chatLoading: true };
 
     case UPDATE_USER_LIST:
+      console.log('UpdateUserList: ' , action.payload);
+      if (action.payload === undefined){
+        return { ...state, chatLoading: false };
+      }
       return {
         ...state,
-        users: [action.payload],
+        chatLoading: false,
+        users: action.payload,
       };
 
     case ACTIVE_USER:
