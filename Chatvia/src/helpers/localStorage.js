@@ -55,7 +55,6 @@ export async function getConversationByUserId(userId) {
 
 
 export async function addConversation(user) {
-    console.log('user in addConversation', user);
     try {
         const conversation = await db.conversations.get(loggedInId);
         if (conversation) {
@@ -64,7 +63,7 @@ export async function addConversation(user) {
                 // If not, add it
                 conversation.users.push(user);
             }
-            await db.conversations.put(conversation);
+            await db.conversations.put(user);
         } else {
             await db.conversations.put({ loggedInId, users: [user] });
         }
