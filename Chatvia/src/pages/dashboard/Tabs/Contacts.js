@@ -26,6 +26,7 @@ import {
 } from '../../../redux/chat/actions';
 import { setActiveTab } from '../../../redux/layout/actions';
 import { withTranslation } from 'react-i18next';
+import { triggerAlert } from '../../../redux/auth/actions';
 
 //use sortedContacts variable as global variable to sort contacts
 let sortedContacts = [
@@ -126,7 +127,25 @@ class Contacts extends Component {
     const message = document.getElementById(
       'addcontact-invitemessage-input'
     ).value;
-    this.props.inviteContact(email, message);
+
+    // check if email is in valid email format
+    if (!email.includes('@' && ('.com' || '.net' || '.org'))) {
+      this.props.triggerAlert({message: 'Invalid email format', color: 'danger'});
+      return;
+    }
+
+    const contact = this.props.contacts.find(
+      (item) => item.children.email === email
+    );
+
+
+    if(contact === undefined) {
+      console.log('contact is undefined');
+      this.props.inviteContact(email, message);
+      this.setState({ modal: false });
+    }else {
+      this.props.triggerAlert({message: 'Contact already exists', color: 'danger'});
+    }
   };
 
   handleContactClick = (userId) => {
@@ -152,9 +171,8 @@ class Contacts extends Component {
   };
 
   render() {
-    const { alert } = this.state;
     const filteredContacts = this.filterContacts();
-    const { t } = this.props;
+    const { t, alert } = this.props;
     return (
       <React.Fragment>
         <div>
@@ -187,6 +205,7 @@ class Contacts extends Component {
                 {t('Add Contacts')}
               </ModalHeader>
               <ModalBody className="p-4">
+                {alert.visible && this.state.modal && <Alert color={alert.color}>{alert.message}</Alert>}
                 <Form>
                   <div className="mb-4">
                     <Label
@@ -254,7 +273,7 @@ class Contacts extends Component {
             {/* End search-box */}
           </div>
           {/* end p-4 */}
-          {/* {this.state.alert.visible && <Alert color={this.state.alert.color}>{this.state.alert.message}</Alert>} */}
+          {alert.visible && !this.state.modal && <Alert color={alert.color}>{alert.message}</Alert>} 
           {/* Start contact lists */}
           <SimpleBar
             style={{ maxHeight: '100%' }}
@@ -314,7 +333,8 @@ class Contacts extends Component {
 
 const mapStateToProps = (state) => {
   const { contacts } = state.Chat;
-  return { contacts };
+  const { alert } = state.Auth;
+  return { contacts, alert };
 };
 
 export default connect(mapStateToProps, {
@@ -322,4 +342,5 @@ export default connect(mapStateToProps, {
   inviteContact,
   setActiveTab,
   activeUser,
+  triggerAlert,
 })(withTranslation()(Contacts));

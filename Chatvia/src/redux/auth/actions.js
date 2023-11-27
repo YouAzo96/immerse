@@ -98,7 +98,7 @@ export const hideAlert = () => ({
   payload: {},
 });
 
-export const triggerAlert = (message, color) => ({
+export const triggerAlert = (alert) => ({
   type: TRIGGER_ALERT,
-  payload: { message, color },
+  payload: alert,
 });

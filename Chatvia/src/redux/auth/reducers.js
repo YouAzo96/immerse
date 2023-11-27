@@ -91,6 +91,7 @@ const Auth = (state = INIT_STATE, action) => {
              error: null
         };
     case SHOW_ALERT:
+      
       return {
         ...state,
         alert: {
@@ -113,6 +114,7 @@ const Auth = (state = INIT_STATE, action) => {
       return {
         ...state,
         alert: {
+          visible: state.alert.visible,
           message: action.payload.message,
           color: action.payload.color
         }

@@ -10,6 +10,11 @@ import {
   FETCH_USER_CONTACTS,
   INVITE_CONTACT,
 } from './constants';
+import { 
+  apiError,
+  triggerAlert,
+}
+from '../auth/actions';
 import {
   activeUser,
   addLoggedinUser,
@@ -52,6 +57,7 @@ function* inviteContacts(action) {
       },
     });
     yield put(inviteContactSuccess(response));
+    yield put(triggerAlert(response))
   } catch (error) {
     console.log('Error in inviteContact:', error);
     yield put(apiError(error));
