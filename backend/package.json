@@ -31,7 +31,8 @@
     "nodemailer-smtp-pool": "^2.5.2",
     "nodemon": "^3.0.1",
     "request-promise": "^4.2.6",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.2",
+    "web-push": "^3.6.6"
   },
   "devDependencies": {
     "jest": "^29.7.0",

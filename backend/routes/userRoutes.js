@@ -321,7 +321,6 @@ router.get('/me', async (req, res) => {
     };
     return res.status(200).json(userData);
   } catch (error) {
-    console.log('Error in /me:', error);
     return res.status(error.status || 500).json({ error });
   }
 });
@@ -412,18 +411,11 @@ router.put('/update', async (req, res) => {
 const verifiedUser = async (req) => {
   try {
     const token = req.headers['authorization'].split(' ')[1].replace(/"/g, '');
-    const isValidUser = await jwt.verify(token, secretKey);
+    const isValidUser = jwt.verify(token, secretKey);
     return isValidUser;
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      // Handle expired token error
-      console.log('TokenExpiredError: ', error);
-      throw { status: 401, message: 'Token expired' };
-    } else {
-      // Handle other JWT verification errors
-      console.log('User Validation Error: ' + error);
-      throw { status: 401, message: 'Invalid token' };
-    }
+    console.log('Token Error: ', error.name);
+    return false;
   }
 };
 

@@ -6,7 +6,13 @@ const errorHandler = require('./errorHandler.js');
 const http = require('http');
 const socketIO = require('socket.io');
 const jwt = require('jsonwebtoken');
-const { frontendServiceUrl, secretKey } = require('./envRoutes.js');
+const request = require('request-promise');
+
+const {
+  frontendServiceUrl,
+  secretKey,
+  notificationsServiceUrl,
+} = require('./envRoutes.js');
 const app = express();
 const port = process.env.PORT || 3001;
 // Middleware
@@ -40,6 +46,27 @@ app.use('/api/users', userRoutes);
 app.use('/api/conversations', conversationRoutes);
 
 app.use(errorHandler);
+
+app.post('/notify', async (req, res) => {
+  const requestOptions = {
+    method: 'POST',
+    uri: `${notificationsServiceUrl}/subscribe`,
+    body: req.body,
+    json: true,
+  };
+
+  await request(requestOptions)
+    .then((response) => {
+      if (response.success) {
+        return res.status(200).json(response.success);
+      } else {
+        return res.status(400).json({ error: 'Failed to subscribe' });
+      }
+    })
+    .catch((error) => {
+      return res.status(500).json(error.error);
+    });
+});
 
 //handle websockets
 io.on('connection', async (socket) => {
@@ -112,7 +139,6 @@ const verifiedUser = async (token) => {
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
 
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);

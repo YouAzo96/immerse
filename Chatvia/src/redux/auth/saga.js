@@ -140,6 +140,7 @@ function* fetchUserProfile() {
 
     const user = {
       ...response,
+      user_id: loggedUser.user_id,
       fname: loggedUser.fname,
       lname: loggedUser.lname,
       email: loggedUser.email,

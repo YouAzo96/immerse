@@ -1,13 +1,21 @@
 const express = require('express');
+const mysql = require('mysql2');
+
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const smtpPool = require('nodemailer-smtp-pool');
 const admin = require('firebase-admin');
-const {
-  usersServiceUrl,
-  frontendServiceUrl,
-  gatewayServiceUrl,
-} = require('../envRoutes');
+const webpush = require('web-push');
+// Create a MySQL connection
+const { dbConfig } = require('../envRoutes');
+const db = mysql.createPool({
+  ...dbConfig,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+const { frontendServiceUrl, gatewayServiceUrl } = require('../envRoutes');
+
 const port = 3003;
 const app = express();
 app.use(bodyParser.json());
@@ -21,6 +29,20 @@ const firebaseConfig = {
   appId: '1:269807638089:web:b47de2727d97c687729198',
 };
 */
+
+//WebPush notifications
+const vapidKeys = {
+  subject: 'mailto: <admin@immerse.com>',
+  publicKey:
+    'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
+  privateKey: 'pMf3gYWIbuK8zYaKjWLD-l7I3HS7lanYsuDuXnKNk54',
+};
+webpush.setVapidDetails(
+  'mailto:your-email@example.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
 const serviceAccount = {
   type: 'service_account',
   project_id: 'immerse-7a7fa',
@@ -39,6 +61,8 @@ const serviceAccount = {
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
+//email transporter
 const transporter = nodemailer.createTransport(
   smtpPool({
     pool: true,
@@ -56,9 +80,57 @@ const transporter = nodemailer.createTransport(
   })
 );
 
+//store subscription to user table
+app.post('/subscribe', async (req, res) => {
+  const { user_id, user_name, subscription } = req.body;
+  console.log('Subscription received: ', subscription);
+  try {
+    const sql = 'UPDATE user set subscription = ? where user_id = ?;';
+    await db.promise().query(sql, [JSON.stringify(subscription), user_id]);
+    const sql1 = `SELECT subscription FROM user 
+                  WHERE user_id in 
+                          (SELECT u.user_id FROM user u
+                          JOIN userhascontact uc ON u.user_id = uc.contact_id
+                          WHERE uc.user_id = ?
+                          UNION
+                          SELECT u.user_id FROM user u
+                          JOIN userhascontact uc ON u.user_id = uc.user_id
+                          WHERE uc.contact_id = ?)  
+                  AND subscription IS NOT NULL;`;
+    const [contactsSubscriptions, flds] = await db
+      .promise()
+      .query(sql1, [user_id, user_id]);
+    contactsSubscriptions.map((sub) => {
+      console.log('Single sub: ', sub.subscription);
+      const notification = webpush
+        .sendNotification(
+          sub.subscription,
+          JSON.stringify({
+            message: user_name + ' is online',
+            user_id: user_id,
+          })
+        )
+        .then((success) => {
+          console.log(`notification sent: ',${JSON.stringify(success)}`);
+        })
+        .catch((err) => {
+          console.log(`notification failed to user_id: ${user_id}, ${err}`);
+        });
+    });
+
+    return res
+      .status(200)
+      .send({ success: 'Subscription successful, contacts notified!' });
+  } catch (error) {
+    console.log('Failed to sub: ', error);
+    return res.status(500).json({ error: 'Failed to subscribe' });
+  }
+});
+
 app.post('/notify', async (req, res) => {
   const eventData = req.body;
   const eventType = eventData.eventType;
+
   let mailOptions = {
     from: 'admin@immersechat.online',
     to: eventData.email,
@@ -67,18 +139,37 @@ app.post('/notify', async (req, res) => {
     switch (eventType) {
       case 'contactAdded':
         console.log('ContactAdded Handled' + eventData.message);
-        /*push notif: Firebase FCM
-        admin
-          .messaging()
-          .send(eventData.message)
-          .then((response) => {
-            console.log('ContactAdded Event Pushed:', response);
-          })
-          .catch((error) => {
-            console.error('ContactAdded Event Failed:', error);
-          });*/
         break;
+      case 'imLoggedIn': //event sent to users who just logged by their contacts.
+        try {
+          const contact_id = eventData.contact_id;
+          const user_id = eventData.user_id;
+          const sql = 'SELECT subscription from user where user_id = ?;';
+          const [specificContactSub, flds] = await db
+            .promise()
+            .query(sql, [contact_id]);
+          console.log('contact sub ', specificContactSub[0]);
+          if (specificContactSub[0]) {
+            webpush
+              .sendNotification(
+                specificContactSub[0].subscription,
+                JSON.stringify({
+                  message: user_name + ' is online',
+                  user_id: user_id,
+                })
+              )
+              .then(() => {
+                console.log('Contact Notified!');
+              })
+              .catch((err) => {
+                console.log('Contact Not Notified! ', err);
+              });
+          }
+        } catch (error) {
+          console.log('Status Contact Notification Failed', error);
+        }
 
+        break;
       case 'verificationCode':
         //send email
         mailOptions.subject = 'Password Reset Verification Code';
@@ -232,7 +323,7 @@ app.post('/notify', async (req, res) => {
       default:
         break;
     }
-    console.log(`${eventType} event received and handled successfully`);
+    console.log(`${eventType} event received and being handled`);
   } catch (error) {
     console.log(`Failed to handle ${eventType} event: ${error}`);
   }

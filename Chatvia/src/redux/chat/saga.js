@@ -10,12 +10,7 @@ import {
   FETCH_USER_CONTACTS,
   INVITE_CONTACT,
 } from './constants';
-import {
-  activeUser,
-  addLoggedinUser,
-  setUserContacts,
-  inviteContactSuccess,
-} from './actions';
+import { activeUser, setUserContacts, inviteContactSuccess } from './actions';
 import { setActiveTab } from '../layout/actions';
 // Import any necessary API functions or services here
 import { APIClient } from '../../apis/apiClient';
@@ -76,7 +71,6 @@ function* handleFullUser(action) {
 
 function* handleActiveUser(action) {
   try {
-    console.log('ActiveUser: ' + action.payload);
   } catch (error) {
     console.error('Error in handleActiveUser saga:', error);
   }
@@ -88,7 +82,6 @@ function* handleAddLoggedUser(action) {
     //user.user_id=31
     //id=1,
     const users = yield select((state) => state.Chat.users);
-    console.log('Users: ', users);
     const newUserId = users.findIndex((item) => item.id === user.id);
     yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
