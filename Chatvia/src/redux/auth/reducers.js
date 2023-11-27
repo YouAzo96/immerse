@@ -43,6 +43,7 @@ const Auth = (state = INIT_STATE, action) => {
       return { ...state, user: action.payload, loading: false, error: null, success: true };
 
     case LOGOUT_USER_SUCCESS:
+      localStorage.removeItem('activeTab');
       return { ...state, user: null, isUserLogout: true };
 
     case FORGET_PASSWORD:

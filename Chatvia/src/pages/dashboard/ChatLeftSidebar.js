@@ -9,9 +9,6 @@ import Chats from "./Tabs/Chats";
 import Groups from "./Tabs/Groups";
 import Contacts from "./Tabs/Contacts";
 import Settings from "./Tabs/Settings";
-import { fetchUserProfile, fetchUserContacts } from '../../redux/actions';
-import { useSelector } from 'react-redux';
-import { PacmanLoader } from 'react-spinners';
 
 function ChatLeftSidebar(props) {
     const activeTab = props.activeTab;

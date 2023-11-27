@@ -8,15 +8,16 @@ import {
 } from "./constants";
 // Hard coded lines here, should change
 const INIT_STATE = {
-	activeTab : "chat",
+	activeTab : localStorage.getItem("activeTab") || "chat",
 	userSidebar : false,
-	conversationName : "Doris Brown",
-	layoutMode : localStorage.getItem("layout_mode") || "light"
+	conversationName : "",
+	layoutMode : localStorage.getItem("layoutMode") || "light",
 };
 
 const Layout = (state = INIT_STATE, action) => {
 	switch (action.type) {
 		case SET_ACTIVE_TAB:
+			localStorage.setItem("activeTab", action.payload);
 			return {
 				...state,
 				activeTab: action.payload

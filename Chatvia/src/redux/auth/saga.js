@@ -137,12 +137,14 @@ function* fetchUserProfile() {
       },
     });
     const loggedUser = getLoggedInUserInfo();
+    
 
     const user = {
       ...response,
       fname: loggedUser.fname,
       lname: loggedUser.lname,
       email: loggedUser.email,
+      userId: loggedUser.user_id,
       about: response.about,
       image: response.image ? response.image : defaultImage,
     };
@@ -179,6 +181,8 @@ function* updateUserProfile(action) {
 
       console.log('current and updated user: ' + JSON.stringify(user));
       setLoggedInUser(response.token);
+      console.log('response message is:', response.message)
+      yield put (triggerAlert({message: response.message, color: 'success'}));
       yield put(setUserProfile(user));
     } else {
       console.log('No changes to update');

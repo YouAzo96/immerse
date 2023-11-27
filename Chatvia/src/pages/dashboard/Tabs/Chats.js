@@ -50,27 +50,27 @@ class Chats extends Component {
   }
 
   handleChange(e) {
-    this.setState({ searchChat: e.target.value });
-    var search = e.target.value;
-    let conversation = this.state.recentChatList;
-    let filteredArray = [];
+    const search = e.target.value;
+    this.setState(prevState => {
+        let conversation = prevState.recentChatList;
+        let filteredArray = [];
 
-    //find conversation name from array
-    for (let i = 0; i < conversation.length; i++) {
-      if (
-        conversation[i].name.toLowerCase().includes(search) ||
-        conversation[i].name.toUpperCase().includes(search)
-      )
-        filteredArray.push(conversation[i]);
-    }
+        //find conversation name from array
+        for (let i = 0; i < conversation.length; i++) {
+            if (
+                conversation[i].name.toLowerCase().includes(search) ||
+                conversation[i].name.toUpperCase().includes(search)
+            )
+                filteredArray.push(conversation[i]);
+        }
 
-    //set filtered items to state
-    this.setState({ recentChatList: filteredArray });
+        //if input value is blank then assign whole recent chatlist to array
+        if (search === '')
+            filteredArray = this.props.recentChatList;
 
-    //if input value is blanck then assign whole recent chatlist to array
-    if (search === '')
-      this.setState({ recentChatList: this.props.recentChatList });
-  }
+        return { searchChat: search, recentChatList: filteredArray };
+    });
+}
 
   openUserChat(e, chat) {
     e.preventDefault();
@@ -86,13 +86,13 @@ class Chats extends Component {
 
     if (chatList) {
       var li = chatList.getElementsByTagName('li');
-      //remove coversation user
+      //remove conversation user
       for (var i = 0; i < li.length; ++i) {
         if (li[i].classList.contains('active')) {
           li[i].classList.remove('active');
         }
       }
-      //find clicked coversation user
+      //find clicked conversation user
       for (var k = 0; k < li.length; ++k) {
         if (li[k].contains(clickedItem)) {
           currentli = li[k];
@@ -101,7 +101,7 @@ class Chats extends Component {
       }
     }
 
-    //activation of clicked coversation user
+    //activation of clicked conversation user
     if (currentli) {
       currentli.classList.add('active');
     }
@@ -154,8 +154,13 @@ class Chats extends Component {
               <ul
                 className="list-unstyled chat-list chat-user-list px-2"
                 id="chat-list"
-              >
-                {this.state.recentChatList.map((chat, key) => (
+                // if there are no recent chats, display a message
+              >{(this.state.recentChatList[0].name === null && this.state.recentChatList.length == 1) ? (
+                  <li className="active">
+                  There are no recent chats
+                </li>
+                 ) : (               
+                this.state.recentChatList.map((chat, key) => (
                   <li
                     key={key}
                     id={'conversation' + key}
@@ -265,7 +270,8 @@ class Chats extends Component {
                       </div>
                     </Link>
                   </li>
-                ))}
+                )))
+                }
               </ul>
             </SimpleBar>
           </div>

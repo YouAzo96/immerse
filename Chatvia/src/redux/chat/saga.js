@@ -20,11 +20,13 @@ import {
   addLoggedinUser,
   setUserContacts,
   inviteContactSuccess,
+  updateUserList,
 } from './actions';
 import { setActiveTab } from '../layout/actions';
 // Import any necessary API functions or services here
 import { APIClient } from '../../apis/apiClient';
 import axios from 'axios';
+import { addConversation, getConversations } from '../../helpers/localStorage';
 const create = new APIClient().create;
 const get = new APIClient().get;
 
@@ -66,7 +68,14 @@ function* inviteContacts(action) {
 // Worker Sagas
 function* handleChatUser(action) {
   try {
-    // Add logic for handling CHAT_USER action here if needed
+    const local = yield call(getConversations);
+    console.log('local', local);
+
+    if (!local) {
+      
+    } else {
+    yield put(updateUserList(local));
+    }
   } catch (error) {
     console.error('Error in handleChatUser saga:', error);
   }
@@ -80,14 +89,6 @@ function* handleFullUser(action) {
   }
 }
 
-function* handleActiveUser(action) {
-  try {
-    console.log('ActiveUser: ' + action.payload);
-  } catch (error) {
-    console.error('Error in handleActiveUser saga:', error);
-  }
-}
-
 function* handleAddLoggedUser(action) {
   try {
     const user = action.payload;
@@ -95,7 +96,12 @@ function* handleAddLoggedUser(action) {
     //id=1,
     const users = yield select((state) => state.Chat.users);
     console.log('Users: ', users);
+    if (users[0].name === null) {
+      //remove the default user
+      users.splice(0, 1);
+    }
     const newUserId = users.findIndex((item) => item.id === user.id);
+    yield call(addConversation, user);
     yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
   } catch (error) {
@@ -113,10 +119,6 @@ function* handleCreateGroup(action) {
 
 export function* watchChatUser() {
   yield takeEvery(CHAT_USER, handleChatUser);
-}
-
-export function* watchActiveUser() {
-  yield takeEvery(ACTIVE_USER, handleActiveUser);
 }
 
 export function* watchAddLoggedUser() {
@@ -142,7 +144,6 @@ export function* watchInviteContact() {
 function* ChatSaga() {
   yield all([
     fork(watchChatUser),
-    fork(watchActiveUser),
     fork(watchAddLoggedUser),
     fork(watchCreateGroup),
     fork(watchFullUser),
