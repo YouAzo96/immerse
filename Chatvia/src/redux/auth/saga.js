@@ -1,4 +1,4 @@
-import { all, call, fork, put, select, takeEvery } from 'redux-saga/effects';
+import { all, call, fork, put, select, takeEvery, delay } from 'redux-saga/effects';
 import {
   APIClient,
   setAuthorization,
@@ -137,6 +137,7 @@ function* fetchUserProfile() {
       },
     });
     const loggedUser = getLoggedInUserInfo();
+    
 
     const user = {
       ...response,
@@ -144,6 +145,7 @@ function* fetchUserProfile() {
       fname: loggedUser.fname,
       lname: loggedUser.lname,
       email: loggedUser.email,
+      userId: loggedUser.user_id,
       about: response.about,
       image: response.image ? response.image : defaultImage,
     };
@@ -180,6 +182,8 @@ function* updateUserProfile(action) {
 
       console.log('current and updated user: ' + JSON.stringify(user));
       setLoggedInUser(response.token);
+      console.log('response message is:', response.message)
+      yield put (triggerAlert({message: response.message, color: 'success'}));
       yield put(setUserProfile(user));
     } else {
       console.log('No changes to update');
@@ -213,9 +217,9 @@ function* alertHandler({ payload: { message, color } }) {
     console.log('Alert Handler:', message, color);
     yield put(showAlert(message, color));
 
-    // yield delay(10000);
+    yield delay(10000);
 
-    // yield put(hideAlert());
+    yield put(hideAlert());
   } catch (error) {
     console.log('Alert Error', error);
     yield put(apiError(error));

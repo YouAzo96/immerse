@@ -344,6 +344,15 @@ router.get('/contacts', async (req, res) => {
     const [results] = await db
       .promise()
       .query(sql, [isValidUser.user_id, isValidUser.user_id]);
+
+    const contacts = results.map((contact) => {
+      if (Buffer.isBuffer(contact.image)) {
+        const base64Image = Buffer.from(contact.image).toString('base64');
+        contact.image = `data:image;base64,${base64Image}`;
+      }
+      return contact;
+    });
+
     return res.status(200).json(results);
   } catch (error) {
     res.status(500).json({ error });

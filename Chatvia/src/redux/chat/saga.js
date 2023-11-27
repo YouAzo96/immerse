@@ -10,11 +10,19 @@ import {
   FETCH_USER_CONTACTS,
   INVITE_CONTACT,
 } from './constants';
-import { activeUser, setUserContacts, inviteContactSuccess } from './actions';
+import { apiError, triggerAlert } from '../auth/actions';
+import {
+  activeUser,
+  addLoggedinUser,
+  setUserContacts,
+  inviteContactSuccess,
+  updateUserList,
+} from './actions';
 import { setActiveTab } from '../layout/actions';
 // Import any necessary API functions or services here
 import { APIClient } from '../../apis/apiClient';
 import axios from 'axios';
+import { addConversation, getConversations } from '../../helpers/localStorage';
 const create = new APIClient().create;
 const get = new APIClient().get;
 
@@ -47,6 +55,7 @@ function* inviteContacts(action) {
       },
     });
     yield put(inviteContactSuccess(response));
+    yield put(triggerAlert(response));
   } catch (error) {
     console.log('Error in inviteContact:', error);
     yield put(apiError(error));
@@ -55,7 +64,14 @@ function* inviteContacts(action) {
 // Worker Sagas
 function* handleChatUser(action) {
   try {
-    // Add logic for handling CHAT_USER action here if needed
+    const local = yield call(getConversations);
+    console.log('local', local);
+
+    if (!local) {
+      yield put(updateUserList());
+    } else {
+      yield put(updateUserList(local));
+    }
   } catch (error) {
     console.error('Error in handleChatUser saga:', error);
   }
@@ -69,20 +85,20 @@ function* handleFullUser(action) {
   }
 }
 
-function* handleActiveUser(action) {
-  try {
-  } catch (error) {
-    console.error('Error in handleActiveUser saga:', error);
-  }
-}
-
 function* handleAddLoggedUser(action) {
   try {
     const user = action.payload;
     //user.user_id=31
     //id=1,
     const users = yield select((state) => state.Chat.users);
+    console.log('Users: ', users);
+    if (users[0].name === null) {
+      console.log('Removing default user');
+      //remove the default user
+      users.splice(0, 1);
+    }
     const newUserId = users.findIndex((item) => item.id === user.id);
+    yield call(addConversation, user);
     yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
   } catch (error) {
@@ -100,10 +116,6 @@ function* handleCreateGroup(action) {
 
 export function* watchChatUser() {
   yield takeEvery(CHAT_USER, handleChatUser);
-}
-
-export function* watchActiveUser() {
-  yield takeEvery(ACTIVE_USER, handleActiveUser);
 }
 
 export function* watchAddLoggedUser() {
@@ -129,7 +141,6 @@ export function* watchInviteContact() {
 function* ChatSaga() {
   yield all([
     fork(watchChatUser),
-    fork(watchActiveUser),
     fork(watchAddLoggedUser),
     fork(watchCreateGroup),
     fork(watchFullUser),

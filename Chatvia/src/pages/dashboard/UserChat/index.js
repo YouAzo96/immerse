@@ -57,6 +57,12 @@ const closestAddr = (await (await fetch(IPV4_URL)).text())
     distA <= distB ? [addrA, distA] : [addrB, distB]
   )[0];
 console.log(closestAddr);
+import {
+  getConversationByUserId,
+  getUser,
+  updateConversation,
+  updateUser,
+} from '../../../helpers/localStorage';
 
 function UserChat(props) {
   const user = props.loggedUser;
@@ -72,6 +78,7 @@ function UserChat(props) {
   //demo conversation messages
   //userType must be required
   const [allUsers] = useState(props.recentChatList);
+  const [activeUser] = useState(props.active_user);
   const [chatMessages, setchatMessages] = useState(
     props.recentChatList[props.active_user].messages
   );
@@ -190,7 +197,7 @@ function UserChat(props) {
 
   const toggle = () => setModal(!modal);
 
-  const addMessage = (message, type) => {
+  const addMessage = async (message, type) => {
     var messageObj = null;
 
     let d = new Date();
@@ -247,6 +254,16 @@ function UserChat(props) {
     //add message object to chat
     setchatMessages([...chatMessages, messageObj]);
 
+    const user = await getConversationByUserId(
+      props.recentChatList[props.active_user].id
+    );
+
+    user.messages = [...user.messages, messageObj];
+
+    console.log('user: ', user);
+
+    await updateConversation(user);
+
     let copyallUsers = [...allUsers];
     copyallUsers[props.active_user].messages = [...chatMessages, messageObj];
     copyallUsers[props.active_user].isTyping = false;
@@ -271,6 +288,8 @@ function UserChat(props) {
 
     setchatMessages(filtered);
   };
+
+  console.log('user in index: ', user);
 
   return (
     <React.Fragment>
@@ -309,7 +328,7 @@ function UserChat(props) {
                       <div className="conversation-list">
                         <div className="chat-avatar">
                           {chat.userType === 'sender' ? (
-                            <img src={avatar1} alt="chatvia" />
+                            <img src={user.image} alt="chatvia" />
                           ) : props.recentChatList[props.active_user]
                               .profilePicture === 'Null' ? (
                             <div className="chat-user-img align-self-center me-3">
@@ -424,7 +443,7 @@ function UserChat(props) {
                             ) : (
                               <div className="chat-avatar">
                                 {chat.userType === 'sender' ? (
-                                  <img src={avatar1} alt="chatvia" />
+                                  <img src={user.image} alt="chatvia" />
                                 ) : props.recentChatList[props.active_user]
                                     .profilePicture === 'Null' ? (
                                   <div className="chat-user-img align-self-center me-3">
@@ -450,7 +469,7 @@ function UserChat(props) {
                           ) : (
                             <div className="chat-avatar">
                               {chat.userType === 'sender' ? (
-                                <img src={avatar1} alt="chatvia" />
+                                <img src={user.image} alt="chatvia" />
                               ) : props.recentChatList[props.active_user]
                                   .profilePicture === 'Null' ? (
                                 <div className="chat-user-img align-self-center me-3">
@@ -544,16 +563,15 @@ function UserChat(props) {
                             chatMessages[key + 1].userType ? null : (
                               <div className="conversation-name">
                                 {chat.userType === 'sender'
-                                  ? 'Patricia Smith'
-                                  : props.recentChatList[props.active_user]
-                                      .name}
+                                  ? props.recentChatList[props.active_user].name
+                                  : 'Admin'}
                               </div>
                             )
                           ) : (
                             <div className="conversation-name">
                               {chat.userType === 'sender'
-                                ? 'Admin'
-                                : props.recentChatList[props.active_user].name}
+                                ? user.fname
+                                : 'Admin'}
                             </div>
                           )}
                         </div>

@@ -43,6 +43,7 @@ const Auth = (state = INIT_STATE, action) => {
       return { ...state, user: action.payload, loading: false, error: null, success: true };
 
     case LOGOUT_USER_SUCCESS:
+      localStorage.removeItem('activeTab');
       return { ...state, user: null, isUserLogout: true };
 
     case FORGET_PASSWORD:
@@ -91,6 +92,7 @@ const Auth = (state = INIT_STATE, action) => {
              error: null
         };
     case SHOW_ALERT:
+      
       return {
         ...state,
         alert: {
@@ -113,6 +115,7 @@ const Auth = (state = INIT_STATE, action) => {
       return {
         ...state,
         alert: {
+          visible: state.alert.visible,
           message: action.payload.message,
           color: action.payload.color
         }

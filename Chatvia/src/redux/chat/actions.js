@@ -1,5 +1,5 @@
 import {
-    CHAT_USER,ACTIVE_USER,FULL_USER, ADD_LOGGED_USER, CREATE_GROUP, FETCH_USER_CONTACTS, FETCH_USER_CONTACTS_SUCCESS, INVITE_CONTACT, INVITE_CONTACT_SUCCESS
+    CHAT_USER,ACTIVE_USER,FULL_USER, UPDATE_USER_LIST, ADD_LOGGED_USER, CREATE_GROUP, FETCH_USER_CONTACTS, FETCH_USER_CONTACTS_SUCCESS, INVITE_CONTACT, INVITE_CONTACT_SUCCESS
 } from './constants';
 
 
@@ -47,4 +47,9 @@ export const fetchUserContacts = () => ({
   export const inviteContactSuccess = (contact) => ({
     type: INVITE_CONTACT_SUCCESS,
     payload: contact,
+  });
+
+  export const updateUserList = (userList) => ({
+    type: UPDATE_USER_LIST,
+    payload: userList,
   });

@@ -5,7 +5,7 @@ import ChatLeftSidebar from './ChatLeftSidebar';
 import UserChat from './UserChat/index';
 import { connect } from 'react-redux';
 import { fetchUserProfile } from '../../redux/auth/actions';
-import { fetchUserContacts } from '../../redux/chat/actions';
+import { fetchUserContacts, chatUser } from '../../redux/chat/actions';
 import { bindActionCreators } from 'redux';
 import { APIClient } from '../../apis/apiClient';
 const gatewayServiceUrl = 'http://localhost:3001';
@@ -57,13 +57,14 @@ class Index extends Component {
   async componentDidMount() {
     this.props.fetchUserProfile();
     this.props.fetchUserContacts();
+    this.props.chatUser();
   }
 
   render() {
-    const { loading, loggedUser, userContacts } = this.props;
+    const { loading, loggedUser, userContacts, chatLoading } = this.props;
     document.title = 'Chat | Immerse: Real-Time Chat App';
 
-    if (loading || !loggedUser || !userContacts) {
+    if (loading || !loggedUser || !userContacts || chatLoading) {
       return (
         <div
           style={{
@@ -97,13 +98,22 @@ class Index extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const { users, contacts } = state.Chat;
+  const { users, contacts, chatLoading } = state.Chat;
   const { loading, user } = state.Auth;
-  return { users, loading, loggedUser: user, userContacts: contacts };
+  return {
+    users,
+    loading,
+    loggedUser: user,
+    userContacts: contacts,
+    chatLoading,
+  };
 };
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ fetchUserProfile, fetchUserContacts }, dispatch);
+  return bindActionCreators(
+    { fetchUserProfile, fetchUserContacts, chatUser },
+    dispatch
+  );
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Index);

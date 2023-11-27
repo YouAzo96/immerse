@@ -8,64 +8,40 @@ import {
   FETCH_USER_CONTACTS_SUCCESS,
   INVITE_CONTACT,
   INVITE_CONTACT_SUCCESS,
+  UPDATE_USER_LIST,
 } from './constants';
 // Needs major change
 
 //Import Images
-import avatar2 from '../../assets/images/users/avatar-2.jpg';
+import blankuser from '../../assets/images/users/blankuser.jpeg';
+import { addUser } from '../../helpers/localStorage';
 
 const INIT_STATE = {
-  // Message structure:
-  //  {
-  //   id: 1,
-  //   message: 'hi',
-  //   time: '00:1',
-  //   userType: 'sender',
-  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
-  //   isFileMessage: false,
-  //   isImageMessage: false
-  // },
-  // {
-  //   id: 2,
-  //   message: 'image',
-  //   imageMessage: [
-  //     {
-  //       image: 'blob:http://localhost:3000/597cfcf4-1e71-45e1-9bf8-60874ded50a6'
-  //     }
-  //   ],
-  //   time: '00:31',
-  //   userType: 'sender',
-  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
-  //   isImageMessage: true,
-  //   isFileMessage: false
-  // },
-  // {
-  //   id: 3,
-  //   message: 'file',
-  //   fileMessage: 'WIN_20210928_19_09_35_Pro.jpg',
-  //   size: 117114,
-  //   time: '00:21',
-  //   userType: 'sender',
-  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
-  //   isFileMessage: true,
-  //   isImageMessage: false
-  // }
   active_user: 0,
   users: [
-    {
-      id: 0,
-      name: 'Patrick Hendricks',
-      profilePicture: avatar2,
-      status: 'online',
-      unRead: 0,
-      roomType: 'contact',
-      isGroup: false,
-      messages: [],
+    {id : 0,
+    name : null,
+    profilePicture : blankuser || null,
+    status : "offline",
+    unRead : 0,
+    roomType : null,
+    isGroup: null,
+    messages: [
+      { id: -1,
+        message: null,
+        time: null,
+        userType: 'sender',
+        isImageMessage: false,
+        isFileMessage: false,
+        imageMessage: null,
+        fileMessage: null,
+        }
+      ],
     },
   ],
   groups: [
     {
-      gourpId: 1,
+      groupId: 1,
       name: '#General',
       profilePicture: 'Null',
       isGroup: true,
@@ -75,6 +51,8 @@ const INIT_STATE = {
     },
   ],
   contacts: null,
+  contactsLoading: false,
+  chatLoading: false,
 };
 //get state from local storage:
 const LOCAL_INIT_STATE = localStorage.getItem('users');
@@ -83,9 +61,21 @@ if (LOCAL_INIT_STATE) INIT_STATE = { ...INIT_STATE, users: LOCAL_INIT_STATE };
 const Chat = (state = INIT_STATE, action) => {
   switch (action.type) {
     case CHAT_USER:
-      return { ...state };
+      return { ...state, chatLoading: true };
+
+    case UPDATE_USER_LIST:
+      console.log('UpdateUserList: ' , action.payload);
+      if (action.payload === undefined){
+        return { ...state, chatLoading: false };
+      }
+      return {
+        ...state,
+        chatLoading: false,
+        users: action.payload,
+      };
 
     case ACTIVE_USER:
+      console.log('ActiveUser: ' + action.payload);
       return {
         ...state,
         active_user: action.payload,
@@ -149,3 +139,4 @@ const Chat = (state = INIT_STATE, action) => {
 };
 
 export default Chat;
+

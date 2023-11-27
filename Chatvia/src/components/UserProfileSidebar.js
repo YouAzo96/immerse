@@ -10,7 +10,7 @@ import AttachedFiles from "./AttachedFiles";
 import CustomCollapse from "./CustomCollapse";
 
 //actions
-import { closeUserSidebar } from "../redux/actions";
+import { activeUser, closeUserSidebar } from "../redux/actions";
 
 //i18n
 import { useTranslation } from 'react-i18next';
@@ -119,7 +119,7 @@ function UserProfileSidebar(props) {
                 {/* Start user-profile-desc */}
                 <SimpleBar style={{ maxHeight: "100%" }} className="p-4 user-profile-desc">
                     <div className="text-muted">
-                        <p className="mb-4">"{t('If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.')}"</p>
+                        <p className="mb-4">"{t(props.activeUser.about)}"</p>
                     </div>
 
                     <div id="profile-user-accordion" className="custom-accordion">
