@@ -137,12 +137,14 @@ function* fetchUserProfile() {
       },
     });
     const loggedUser = getLoggedInUserInfo();
+    
 
     const user = {
       ...response,
       fname: loggedUser.fname,
       lname: loggedUser.lname,
       email: loggedUser.email,
+      userId: loggedUser.user_id,
       about: response.about,
       image: response.image ? response.image : defaultImage,
     };

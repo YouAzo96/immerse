@@ -34,6 +34,7 @@ import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 
 //i18n
 import { useTranslation } from 'react-i18next';
+import { getUser, updateUser } from '../../../helpers/localStorage';
 
 function UserChat(props) {
   const user = props.loggedUser;
@@ -64,7 +65,7 @@ function UserChat(props) {
 
   const toggle = () => setModal(!modal);
 
-  const addMessage = (message, type) => {
+  const addMessage = async (message, type) => {
     var messageObj = null;
 
     let d = new Date();
@@ -120,6 +121,14 @@ function UserChat(props) {
 
     //add message object to chat
     setchatMessages([...chatMessages, messageObj]);
+
+    console.log('active user: ', props.active_user)
+
+    const user = await getUser(props.activeUser);
+
+    user.messages = [...user.messages, messageObj];
+
+    await updateUser(props.activeUser, user);
 
     let copyallUsers = [...allUsers];
     copyallUsers[props.active_user].messages = [...chatMessages, messageObj];

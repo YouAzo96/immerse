@@ -20,11 +20,13 @@ import {
   addLoggedinUser,
   setUserContacts,
   inviteContactSuccess,
+  updateUserList,
 } from './actions';
 import { setActiveTab } from '../layout/actions';
 // Import any necessary API functions or services here
 import { APIClient } from '../../apis/apiClient';
 import axios from 'axios';
+import { getUsers } from '../../helpers/localStorage';
 const create = new APIClient().create;
 const get = new APIClient().get;
 
@@ -66,7 +68,12 @@ function* inviteContacts(action) {
 // Worker Sagas
 function* handleChatUser(action) {
   try {
-    // Add logic for handling CHAT_USER action here if needed
+    const local = yield call(getUsers);
+    console.log('local', local);
+
+    if (local.length > 0) {
+      yield put(updateUserList(local));
+    }
   } catch (error) {
     console.error('Error in handleChatUser saga:', error);
   }

@@ -32,11 +32,12 @@ function UserHead(props) {
         }
     }
 
-    function deleteMessage() {
+    function deleteMessage(e) {
         let allUsers = props.users;
         let copyallUsers = allUsers;
         copyallUsers[props.active_user].messages = [];
-
+// Youssef: I need to check this, have to return when more functions are added
+        // console.log("copyallUsers in UserHead.js are:", copyallUsers); 
         props.setFullUser(copyallUsers);
     }
 

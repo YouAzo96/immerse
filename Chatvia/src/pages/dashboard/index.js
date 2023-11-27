@@ -6,7 +6,7 @@ import UserChat from "./UserChat/index";
 
 import { connect } from "react-redux";
 import { fetchUserProfile } from '../../redux/auth/actions';
-import { fetchUserContacts } from '../../redux/chat/actions';
+import { fetchUserContacts, chatUser } from '../../redux/chat/actions';
 import { bindActionCreators } from 'redux';
 
 class Index extends Component {
@@ -14,6 +14,7 @@ class Index extends Component {
         console.log("this.props in Index are:", this);
         this.props.fetchUserProfile();
         this.props.fetchUserContacts();
+        this.props.chatUser();
     }
     
     render() {
@@ -48,7 +49,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => {
-    return bindActionCreators({ fetchUserProfile, fetchUserContacts }, dispatch);
+    return bindActionCreators({ fetchUserProfile, fetchUserContacts, chatUser }, dispatch);
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Index);

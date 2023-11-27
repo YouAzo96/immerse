@@ -8,6 +8,7 @@ import {
   FETCH_USER_CONTACTS_SUCCESS,
   INVITE_CONTACT,
   INVITE_CONTACT_SUCCESS,
+  UPDATE_USER_LIST,
 } from './constants';
 // Needs major change
 
@@ -16,40 +17,6 @@ import avatar2 from '../../assets/images/users/avatar-2.jpg';
 
 const INIT_STATE = {
   // Message structure:
-  //  {
-  //   id: 1,
-  //   message: 'hi',
-  //   time: '00:1',
-  //   userType: 'sender',
-  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
-  //   isFileMessage: false,
-  //   isImageMessage: false
-  // },
-  // {
-  //   id: 2,
-  //   message: 'image',
-  //   imageMessage: [
-  //     {
-  //       image: 'blob:http://localhost:3000/597cfcf4-1e71-45e1-9bf8-60874ded50a6'
-  //     }
-  //   ],
-  //   time: '00:31',
-  //   userType: 'sender',
-  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
-  //   isImageMessage: true,
-  //   isFileMessage: false
-  // },
-  // {
-  //   id: 3,
-  //   message: 'file',
-  //   fileMessage: 'WIN_20210928_19_09_35_Pro.jpg',
-  //   size: 117114,
-  //   time: '00:21',
-  //   userType: 'sender',
-  //   image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
-  //   isFileMessage: true,
-  //   isImageMessage: false
-  // }
   active_user: 0,
   users: [
     {
@@ -60,12 +27,45 @@ const INIT_STATE = {
       unRead: 0,
       roomType: 'contact',
       isGroup: false,
-      messages: [],
+      messages: [{
+        id: 1,
+        message: 'hi',
+        time: '00:1',
+        userType: 'sender',
+        image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
+        isFileMessage: false,
+        isImageMessage: false
+      },
+      {
+        id: 2,
+        message: 'image',
+        imageMessage: [
+          {
+            image: 'blob:http://localhost:3000/597cfcf4-1e71-45e1-9bf8-60874ded50a6'
+          }
+        ],
+        time: '00:31',
+        userType: 'sender',
+        image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
+        isImageMessage: true,
+        isFileMessage: false
+      },
+      {
+        id: 3,
+        message: 'file',
+        fileMessage: 'WIN_20210928_19_09_35_Pro.jpg',
+        size: 117114,
+        time: '00:21',
+        userType: 'sender',
+        image: '/static/media/avatar-4.b23e41d9c09997efbc21.jpg',
+        isFileMessage: true,
+        isImageMessage: false
+      }],
     },
   ],
   groups: [
     {
-      gourpId: 1,
+      groupId: 1,
       name: '#General',
       profilePicture: 'Null',
       isGroup: true,
@@ -81,6 +81,12 @@ const Chat = (state = INIT_STATE, action) => {
   switch (action.type) {
     case CHAT_USER:
       return { ...state };
+
+    case UPDATE_USER_LIST:
+      return {
+        ...state,
+        users: action.payload,
+      };
 
     case ACTIVE_USER:
       return {
