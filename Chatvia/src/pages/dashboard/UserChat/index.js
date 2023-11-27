@@ -49,6 +49,7 @@ function UserChat(props) {
   //demo conversation messages
   //userType must be required
   const [allUsers] = useState(props.recentChatList);
+  const [activeUser] = useState(props.active_user);
   console.log('all users in index: ', allUsers);
   const [chatMessages, setchatMessages] = useState(
     props.recentChatList[props.active_user].messages
@@ -122,13 +123,13 @@ function UserChat(props) {
     //add message object to chat
     setchatMessages([...chatMessages, messageObj]);
 
-    console.log('active user: ', props.active_user)
-
-    const user = await getConversationByUserId(props.activeUser);
+    const user = await getConversationByUserId(props.recentChatList[props.active_user].id);
 
     user.messages = [...user.messages, messageObj];
+    
+    console.log('user: ', user);
 
-    await updateConversation(props.activeUser, user);
+    await updateConversation(user);
 
     let copyallUsers = [...allUsers];
     copyallUsers[props.active_user].messages = [...chatMessages, messageObj];
@@ -154,6 +155,8 @@ function UserChat(props) {
 
     setchatMessages(filtered);
   };
+
+  console.log('user in index: ', user);
 
   return (
     <React.Fragment>
@@ -192,7 +195,7 @@ function UserChat(props) {
                       <div className="conversation-list">
                         <div className="chat-avatar">
                           {chat.userType === 'sender' ? (
-                            <img src={avatar1} alt="chatvia" />
+                            <img src={user.image} alt="chatvia" />
                           ) : props.recentChatList[props.active_user]
                               .profilePicture === 'Null' ? (
                             <div className="chat-user-img align-self-center me-3">
@@ -307,7 +310,7 @@ function UserChat(props) {
                             ) : (
                               <div className="chat-avatar">
                                 {chat.userType === 'sender' ? (
-                                  <img src={avatar1} alt="chatvia" />
+                                  <img src={user.image} alt="chatvia" />
                                 ) : props.recentChatList[props.active_user]
                                     .profilePicture === 'Null' ? (
                                   <div className="chat-user-img align-self-center me-3">
@@ -333,7 +336,7 @@ function UserChat(props) {
                           ) : (
                             <div className="chat-avatar">
                               {chat.userType === 'sender' ? (
-                                <img src={avatar1} alt="chatvia" />
+                                <img src={user.image} alt="chatvia" />
                               ) : props.recentChatList[props.active_user]
                                   .profilePicture === 'Null' ? (
                                 <div className="chat-user-img align-self-center me-3">
@@ -427,16 +430,16 @@ function UserChat(props) {
                             chatMessages[key + 1].userType ? null : (
                               <div className="conversation-name">
                                 {chat.userType === 'sender'
-                                  ? 'Patricia Smith'
-                                  : props.recentChatList[props.active_user]
-                                      .name}
+                                  ? props.recentChatList[props.active_user]
+                                      .name
+                                  : "Admin"}
                               </div>
                             )
                           ) : (
                             <div className="conversation-name">
                               {chat.userType === 'sender'
-                                ? 'Admin'
-                                : props.recentChatList[props.active_user].name}
+                                ? user.fname
+                                : 'Admin'}
                             </div>
                           )}
                         </div>
@@ -480,5 +483,5 @@ const mapStateToProps = (state) => {
 };
 
 export default withRouter(
-  connect(mapStateToProps, { openUserSidebar, setFullUser })(UserChat)
+  connect(mapStateToProps, { openUserSidebar, setFullUser, })(UserChat)
 );

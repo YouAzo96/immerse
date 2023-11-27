@@ -18,10 +18,10 @@ class Index extends Component {
     }
     
     render() {
-        const { loading, loggedUser, userContacts } = this.props;
+        const { loading, loggedUser, userContacts, chatLoading } = this.props;
         document.title = "Chat | Immerse: Real-Time Chat App"
 
-        if (loading || !loggedUser || !userContacts) {
+        if (loading || !loggedUser || !userContacts || chatLoading ) {
             return (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                     <PacmanLoader />
@@ -43,9 +43,9 @@ class Index extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { users, contacts } = state.Chat;
+    const { users, contacts, chatLoading } = state.Chat;
     const { loading, user } = state.Auth;
-    return { users, loading, loggedUser: user, userContacts: contacts };
+    return { users, loading, loggedUser: user, userContacts: contacts, chatLoading };
 };
 
 const mapDispatchToProps = (dispatch) => {
