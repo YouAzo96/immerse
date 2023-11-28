@@ -267,6 +267,7 @@ function UserChat(props) {
     await updateConversation(user);
 
     let copyallUsers = [...allUsers];
+    console.log('allusers', copyallUsers);
     copyallUsers[props.active_user].messages = [...chatMessages, messageObj];
     copyallUsers[props.active_user].isTyping = false;
     props.setFullUser(copyallUsers);
@@ -291,8 +292,6 @@ function UserChat(props) {
     setchatMessages(filtered);
   };
 
-  console.log('activeUser: ', props.recentChatList[activeUser]);
-
   if (props.recentChatList[props.active_user].name === null) {
     return (
       <div
@@ -301,6 +300,7 @@ function UserChat(props) {
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
+          width: '100%',
         }}
       >
         <p>No conversations available</p>
