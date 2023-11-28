@@ -2,8 +2,8 @@
   "name": "immerse",
   "private": true,
   "scripts": {
-    "start": "npm-run-all --parallel start:Chatvia start:backend",
-    "start:frontend": "cd Chatvia && npm start",
+    "start": "npm-run-all --parallel start:Immerse start:backend",
+    "start:frontend": "cd Immerse && npm start",
     "start:backend": "cd backend && npm start"
   },
   "dependencies": {
