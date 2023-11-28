@@ -280,13 +280,17 @@ function UserChat(props) {
     }
   }
 
-  const deleteMessage = (id) => {
+  const deleteMessage = async (id) => {
     let conversation = chatMessages;
-
+    const user = await getConversationByUserId(
+      props.loggedUser.user_id,
+      props.recentChatList[props.active_user].id
+    );
     var filtered = conversation.filter(function (item) {
       return item.id !== id;
     });
-
+    user.messages = filtered;
+    await updateConversation(props.loggedUser.user_id, user);
     setchatMessages(filtered);
   };
 
