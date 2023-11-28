@@ -67,6 +67,8 @@ app.post('/notify', async (req, res) => {
       return res.status(500).json(error.error);
     });
 });
+//sockets store:
+const sockets = new Map();
 
 //handle websockets
 io.on('connection', async (socket) => {
@@ -78,10 +80,15 @@ io.on('connection', async (socket) => {
   if (!token) {
     return;
   }
+
   const user = await verifiedUser(token);
   const user_id = user.user_id;
   if (user_id) {
+    //add socket to store:
+    sockets.set(user_id, socket);
+    console.log('socket added to store');
     const socketId = socket.id;
+
     const sql = 'update user set socket_id = ? where user_id = ?';
     db.promise()
       .execute(sql, [socketId, user_id])
@@ -112,6 +119,7 @@ io.on('connection', async (socket) => {
   // Handle user disconnect
   socket.on('disconnect', () => {
     if (user_id) {
+      sockets.delete(user_id); //delete socket from store
       const sql = 'update user set socket_id = NULL WHERE user_id = ?';
       db.promise()
         .execute(sql, [user_id])
