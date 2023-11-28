@@ -40,152 +40,67 @@ import {
   getConversationByUserId,
   updateConversation,
 } from '../../../helpers/localStorage';
-import { PacmanLoader } from 'react-spinners';
-
-//Get Closest STUN Server:
-const GEO_LOC_URL =
-  'https://raw.githubusercontent.com/pradt2/always-online-stun/master/geoip_cache.txt';
-const IPV4_URL =
-  'https://raw.githubusercontent.com/pradt2/always-online-stun/master/valid_ipv4s.txt';
-const GEO_USER_URL = 'https://geolocation-db.com/json/';
-const geoLocs = await (await fetch(GEO_LOC_URL)).json();
-const { latitude, longitude } = await (await fetch(GEO_USER_URL)).json();
-const closestAddr = (await (await fetch(IPV4_URL)).text())
-  .trim()
-  .split('\n')
-  .map((addr) => {
-    const [stunLat, stunLon] = geoLocs[addr.split(':')[0]];
-    const dist =
-      ((latitude - stunLat) ** 2 + (longitude - stunLon) ** 2) ** 0.5;
-    return [addr, dist];
-  })
-  .reduce(([addrA, distA], [addrB, distB]) =>
-    distA <= distB ? [addrA, distA] : [addrB, distB]
-  )[0];
-console.log(closestAddr);
+import { getLoggedInUser } from '../../../helpers/authUtils';
 
 function UserChat(props) {
   const user = props.loggedUser;
-  const [peerConnection, setPeerConnection] = useState(null);
-  const [socket, setSocket] = useState(null);
-  const ref = useRef();
+  const active_user = props.active_user;
 
+  //userType must be required
+  const [allUsers] = useState(props.recentChatList);
+  const [chatMessages, setchatMessages] = useState(
+    props.recentChatList[props.active_user].messages
+  );
+
+  const ref = useRef();
+  const socketRef = useRef();
   const [modal, setModal] = useState(false);
 
   /* intilize t variable for multi language implementation */
   const { t } = useTranslation();
 
-  //demo conversation messages
-  //userType must be required
-  const [allUsers] = useState(props.recentChatList);
-  const [activeUser] = useState(props.active_user);
-  const [chatMessages, setchatMessages] = useState(
-    props.recentChatList[props.active_user].messages
-  );
-
-
   useEffect(() => {
-    const token = localStorage.getItem('authUser');
-    if (socket && !token) {
-      socket.disconnect();
-      setSocket(null);
-    } else if (!socket && token) {
+    const token = getLoggedInUser();
+
+    // Check if the socket instance already exists in the ref
+    if (!socketRef.current && token) {
       const newSocket = io('http://localhost:3001', {
         query: {
           userId: token,
         },
       });
-      setSocket(newSocket);
+      socketRef.current = newSocket;
     }
 
-    // Clean up previous socket connection when component unmounts or token changes
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, [socket]);
-
-  useEffect(() => {
-    // Initialize peer connection
-    const initPeerConnection = async () => {
-      const ICEConfig = {
-        iceServers: [
-          { urls: `stun:${closestAddr}` },
-          // { urls: 'stun:stun.l.google.com:19302' },
-          // { urls: 'stun:stun1.l.google.com:19302' },
-          // { urls: 'stun:stun2.l.google.com:19302' },
-          // { urls: 'stun:stun3.l.google.com:19302' },
-          // { urls: 'stun:stun4.l.google.com:19302' },
-          // { urls: 'stun:stun.stunprotocol.org:3478' },
-          // Add more STUN or TURN servers as needed
-        ],
-      };
-      const peerConnection = new RTCPeerConnection(ICEConfig);
-      // Create an offer
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-      // Send the offer to the server for signaling
-      if (!socket) {
-        return;
-      }
-      socket.emit('offer', {
-        to: 'otherUserId', // Replace with the recipient's socket.id
-        offer: offer,
-      });
-
-      // Handle ICE candidates
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          // Send ICE candidate to the server
-          socket.emit('ice-candidate', {
-            to: 'otherUserId', // Replace with the recipient's socket.id
-            iceCandidate: event.candidate,
-          });
+    // Set up event listeners or any other socket-related logic
+    if (socketRef.current) {
+      socketRef.current.on('chat message', (data) => {
+        const { sender, message } = data;
+        console.log('message received: ', message);
+        //check if we have an open conversation
+        const copyallUsers = [...allUsers];
+        console.log('copyallusers: ', copyallUsers);
+        const foundUserIndex = Object.keys(allUsers).find(
+          (key) => allUsers[key].id === sender
+        );
+        console.log('foundindex', foundUserIndex);
+        //if the sender have an open chat with us
+        if (foundUserIndex) {
+          copyallUsers[foundUserIndex].messages.push(message);
+          copyallUsers[foundUserIndex].unRead++;
+          console.log('new users list: ', copyallUsers);
+          props.setFullUser(copyallUsers);
+          scrolltoBottom();
         }
-      };
-
-      setPeerConnection(peerConnection);
-    };
-
-    initPeerConnection();
-
+        //else
+      });
+    }
     return () => {
-      if (peerConnection) {
-        peerConnection.close();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
       }
     };
-  }, [peerConnection]);
-
-  // Handle signaling events
-  useEffect(() => {
-    const handleOffer = (data) => {
-      // Handle offer and create answer
-      // Example: createAnswer();
-    };
-
-    const handleAnswer = async (data) => {
-      // Handle answer
-      await peerConnection.setRemoteDescription(data.answer);
-    };
-
-    const handleIceCandidate = async (data) => {
-      // Add ICE candidate to peer connection
-      await peerConnection.addIceCandidate(data.iceCandidate);
-    };
-    if (!socket) {
-      return;
-    }
-    socket.on('offer', handleOffer);
-    socket.on('answer', handleAnswer);
-    socket.on('ice-candidate', handleIceCandidate);
-
-    return () => {
-      socket.off('offer', handleOffer);
-      socket.off('answer', handleAnswer);
-      socket.off('ice-candidate', handleIceCandidate);
-    };
-  }, [socket]);
+  }, []);
 
   useEffect(() => {
     setchatMessages(props.recentChatList[props.active_user].messages);
@@ -214,7 +129,7 @@ function UserChat(props) {
           message: message,
           time: '00:' + n,
           userType: 'sender',
-          image: avatar4,
+          image: null,
           isFileMessage: false,
           isImageMessage: false,
         };
@@ -264,14 +179,20 @@ function UserChat(props) {
 
     user.messages = [...user.messages, messageObj];
 
-    // console.log('user: ', user);
-
-    await updateConversation(user);
+    await updateConversation(props.loggedUser.user_id, user);
 
     let copyallUsers = [...allUsers];
-    console.log('allusers', copyallUsers);
     copyallUsers[props.active_user].messages = [...chatMessages, messageObj];
     copyallUsers[props.active_user].isTyping = false;
+    //send to user :
+    if (socketRef.current) {
+      console.log('Here: ', copyallUsers[props.active_user].id);
+      socketRef.current.emit('chat message', {
+        sender: props.loggedUser.user_id,
+        receiver: copyallUsers[props.active_user].id,
+        message: messageObj,
+      });
+    }
     props.setFullUser(copyallUsers);
 
     scrolltoBottom();
@@ -583,9 +504,9 @@ function UserChat(props) {
                               chatMessages[key].userType ===
                               chatMessages[key + 1].userType ? null : (
                                 <div className="conversation-name">
-                                  {chat.userType === 'sender'
+                                  {chat.userType === 'receiver'
                                     ? props.recentChatList[props.active_user]
-                                        .name
+                                        .name.name
                                     : 'Admin'}
                                 </div>
                               )

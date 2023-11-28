@@ -31,18 +31,6 @@ export async function getConversationByUserId(loggedInId, userId) {
     const userData = conversation.users.find((user) => user.id === userId);
 
     if (userData) {
-      console.log('user', userData);
-
-      // Accumulate messages from each user in the conversation
-      const allMessages = conversation.users.reduce((acc, user) => {
-        if (user.messages) {
-          return acc.concat(user.messages);
-        }
-        return acc;
-      }, []);
-
-      console.log('allMessages', allMessages);
-
       return userData;
     } else {
       console.log(`User with ID ${userId} not found in conversation`);
