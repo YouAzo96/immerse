@@ -211,7 +211,7 @@ function UserChat(props) {
           message: message,
           time: n,
           userType: 'sender',
-          image: avatar4,
+          image: props.loggedUser.image,
           isFileMessage: false,
           isImageMessage: false,
         };
@@ -225,7 +225,7 @@ function UserChat(props) {
           size: message.size,
           time: n,
           userType: 'sender',
-          image: avatar4,
+          image: props.loggedUser.image,
           isFileMessage: true,
           isImageMessage: false,
         };
@@ -241,7 +241,7 @@ function UserChat(props) {
           size: message.size,
           time: n,
           userType: 'sender',
-          image: avatar4,
+          image: props.loggedUser.image,
           isImageMessage: true,
           isFileMessage: false,
         };

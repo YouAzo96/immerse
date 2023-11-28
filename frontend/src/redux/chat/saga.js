@@ -77,6 +77,7 @@ function* handleChatUser(action) {
   } catch (error) {
     window.location.reload();
     console.error('Error in handleChatUser saga:', error);
+    yield put(apiError(error));
   }
 }
 
