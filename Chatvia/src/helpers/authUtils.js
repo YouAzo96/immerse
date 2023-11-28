@@ -46,9 +46,15 @@ const setLoggedInUser = (user) => {
   localStorage.setItem('authUser', JSON.stringify(user));
 };
 
+const setLoggedInUserRefresh = (user) => {
+  localStorage.setItem('authUser', JSON.stringify(user));
+  window.location.reload();
+}
+
 export {
   isUserAuthenticated,
   setLoggedInUser,
+  setLoggedInUserRefresh,
   getLoggedInUser,
   getLoggedInUserInfo,
 };

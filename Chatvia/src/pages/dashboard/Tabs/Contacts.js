@@ -160,7 +160,7 @@ class Contacts extends Component {
       email: contact.children.email,
       about: contact.children.about,
       profilePicture: contact.children.image,
-      status: 'online',
+      status: contact.children.last_seen,
       unRead: 0,
       roomType: 'contact',
       isGroup: false,

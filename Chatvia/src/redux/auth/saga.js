@@ -35,6 +35,7 @@ import {
   getLoggedInUserInfo,
   isUserAuthenticated,
   setLoggedInUser,
+  setLoggedInUserRefresh,
 } from '../../helpers/authUtils';
 
 import axios from 'axios';
@@ -182,8 +183,11 @@ function* updateUserProfile(action) {
       const user = { ...currentUser, ...updatedUser };
 
       console.log('current and updated user: ' + JSON.stringify(user));
+      if (user.image) {
+        setLoggedInUserRefresh(response.token);
+      }else{
       setLoggedInUser(response.token);
-      console.log('response message is:', response.message)
+      }console.log('response message is:', response.message)
       yield put (triggerAlert({message: response.message, color: 'success'}));
       yield put(setUserProfile(user));
     } else {

@@ -266,7 +266,7 @@ function UserChat(props) {
 
     // console.log('user: ', user);
 
-    await updateConversation(user);
+    await updateConversation(props.loggedUser.user_id, user);
 
     let copyallUsers = [...allUsers];
     copyallUsers[props.active_user].messages = [...chatMessages, messageObj];
