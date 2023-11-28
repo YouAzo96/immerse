@@ -101,7 +101,6 @@ app.post('/subscribe', async (req, res) => {
       .promise()
       .query(sql1, [user_id, user_id]);
     contactsSubscriptions.map((sub) => {
-      console.log('Single sub: ', sub.subscription);
       const notification = webpush
         .sendNotification(
           sub.subscription,

@@ -17,6 +17,7 @@ import { connect } from 'react-redux';
 import SimpleBar from 'simplebar-react';
 
 import withRouter from '../../../components/withRouter';
+import blankuser from '../../../assets/images/users/blankuser.jpeg';
 
 //Import Components
 import UserProfileSidebar from '../../../components/UserProfileSidebar';
@@ -27,7 +28,11 @@ import ChatInput from './ChatInput';
 import FileList from './FileList';
 
 //actions
-import { openUserSidebar, setFullUser } from '../../../redux/actions';
+import {
+  openUserSidebar,
+  setFullUser,
+  addLoggedinUser,
+} from '../../../redux/actions';
 
 //Import Images
 import avatar4 from '../../../assets/images/users/avatar-4.jpg';
@@ -45,7 +50,7 @@ import { getLoggedInUser } from '../../../helpers/authUtils';
 function UserChat(props) {
   const user = props.loggedUser;
   const active_user = props.active_user;
-
+  const contacts = props.userContacts;
   //userType must be required
   const [allUsers] = useState(props.recentChatList);
   const [chatMessages, setchatMessages] = useState(
@@ -76,23 +81,40 @@ function UserChat(props) {
     if (socketRef.current) {
       socketRef.current.on('chat message', (data) => {
         const { sender, message } = data;
-        console.log('message received: ', message);
         //check if we have an open conversation
         const copyallUsers = [...allUsers];
-        console.log('copyallusers: ', copyallUsers);
         const foundUserIndex = Object.keys(allUsers).find(
           (key) => allUsers[key].id === sender
         );
-        console.log('foundindex', foundUserIndex);
         //if the sender have an open chat with us
         if (foundUserIndex) {
           copyallUsers[foundUserIndex].messages.push(message);
-          copyallUsers[foundUserIndex].unRead++;
+          copyallUsers[foundUserIndex].unRead += 1;
           console.log('new users list: ', copyallUsers);
           props.setFullUser(copyallUsers);
           scrolltoBottom();
+        } else {
+          //else
+          const contact = contacts.find(
+            (cntct) => (cntct.children.user_id = sender)
+          );
+          if (contact) {
+            const newUser = {
+              id: copyallUsers.length + 1,
+              name: contact.children.name,
+              profilePicture: contact.children.image || blankuser || null,
+              status: 'online',
+              unRead: 1,
+              roomType: 'contact',
+              isGroup: false,
+              messages: [message],
+            };
+
+            copyallUsers.push(newUser);
+            //props.addLoggedinUser(newUser);
+            props.setFullUser(copyallUsers);
+          }
         }
-        //else
       });
     }
     return () => {
@@ -506,7 +528,7 @@ function UserChat(props) {
                                 <div className="conversation-name">
                                   {chat.userType === 'receiver'
                                     ? props.recentChatList[props.active_user]
-                                        .name.name
+                                        .name
                                     : 'Admin'}
                                 </div>
                               )

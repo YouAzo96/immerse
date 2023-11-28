@@ -21,6 +21,7 @@ class Chats extends Component {
     this.state = {
       searchChat: '',
       recentChatList: this.props.recentChatList,
+      contactList: this.props.contactList,
     };
     this.openUserChat = this.openUserChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -144,7 +145,7 @@ class Chats extends Component {
           </div>
 
           {/* online users */}
-          <OnlineUsers />
+          <OnlineUsers recentChatList={this.props.recentChatList} />
 
           {/* Start chat-message-list  */}
           <div>
