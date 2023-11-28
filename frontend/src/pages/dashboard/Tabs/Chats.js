@@ -21,6 +21,7 @@ class Chats extends Component {
     this.state = {
       searchChat: '',
       recentChatList: this.props.recentChatList,
+      contactList: this.props.contactList,
     };
     this.openUserChat = this.openUserChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -51,26 +52,25 @@ class Chats extends Component {
 
   handleChange(e) {
     const search = e.target.value;
-    this.setState(prevState => {
-        let conversation = prevState.recentChatList;
-        let filteredArray = [];
+    this.setState((prevState) => {
+      let conversation = prevState.recentChatList;
+      let filteredArray = [];
 
-        //find conversation name from array
-        for (let i = 0; i < conversation.length; i++) {
-            if (
-                conversation[i].name.toLowerCase().includes(search) ||
-                conversation[i].name.toUpperCase().includes(search)
-            )
-                filteredArray.push(conversation[i]);
-        }
+      //find conversation name from array
+      for (let i = 0; i < conversation.length; i++) {
+        if (
+          conversation[i].name.toLowerCase().includes(search) ||
+          conversation[i].name.toUpperCase().includes(search)
+        )
+          filteredArray.push(conversation[i]);
+      }
 
-        //if input value is blank then assign whole recent chatlist to array
-        if (search === '')
-            filteredArray = this.props.recentChatList;
+      //if input value is blank then assign whole recent chatlist to array
+      if (search === '') filteredArray = this.props.recentChatList;
 
-        return { searchChat: search, recentChatList: filteredArray };
+      return { searchChat: search, recentChatList: filteredArray };
     });
-}
+  }
 
   openUserChat(e, chat) {
     e.preventDefault();
@@ -145,7 +145,11 @@ class Chats extends Component {
           </div>
 
           {/* online users */}
-          <OnlineUsers contacts={this.props.contacts} />
+          <OnlineUsers
+            contacts={this.props.contacts}
+            recentChatList={this.props.recentChatList}
+          />
+
           {/* Start chat-message-list  */}
           <div>
             <h5 className="mb-3 px-3 font-size-16">Recent</h5>
@@ -154,123 +158,125 @@ class Chats extends Component {
                 className="list-unstyled chat-list chat-user-list px-2"
                 id="chat-list"
                 // if there are no recent chats, display a message
-              >{(this.state.recentChatList[0].name === null && this.state.recentChatList.length == 1) ? (
-                  <li className="active">
-                  There are no recent chats
-                </li>
-                 ) : (               
-                this.state.recentChatList.map((chat, key) => (
-                  <li
-                    key={key}
-                    id={'conversation' + key}
-                    className={
-                      chat.unRead
-                        ? 'unread'
-                        : chat.isTyping
-                        ? 'typing'
-                        : key === this.props.active_user
-                        ? 'active'
-                        : ''
-                    }
-                  >
-                    <Link to="#" onClick={(e) => this.openUserChat(e, chat)}>
-                      <div className="d-flex">
-                        {chat.profilePicture === 'Null' ? (
-                          <div
-                            className={
-                              'chat-user-img ' +
-                              chat.status +
-                              ' align-self-center me-1 ms-0'
-                            }
-                          >
-                            <div className="avatar-xs">
-                              <span className="avatar-title rounded-circle bg-primary-subtle text-primary">
-                                {chat.name.charAt(0)}
+              >
+                {this.state.recentChatList[0].name === null &&
+                this.state.recentChatList.length == 1 ? (
+                  <li className="active" style={{ textAlign: 'center' }}>
+                    There are no recent chats
+                  </li>
+                ) : (
+                  this.state.recentChatList.map((chat, key) => (
+                    <li
+                      key={key}
+                      id={'conversation' + key}
+                      className={
+                        chat.unRead
+                          ? 'unread'
+                          : chat.isTyping
+                          ? 'typing'
+                          : key === this.props.active_user
+                          ? 'active'
+                          : ''
+                      }
+                    >
+                      <Link to="#" onClick={(e) => this.openUserChat(e, chat)}>
+                        <div className="d-flex">
+                          {chat.profilePicture === 'Null' ? (
+                            <div
+                              className={
+                                'chat-user-img ' +
+                                chat.status +
+                                ' align-self-center me-1 ms-0'
+                              }
+                            >
+                              <div className="avatar-xs">
+                                <span className="avatar-title rounded-circle bg-primary-subtle text-primary">
+                                  {chat.name.charAt(0)}
+                                </span>
+                              </div>
+                              {chat.status && (
+                                <span className="user-status"></span>
+                              )}
+                            </div>
+                          ) : (
+                            <div
+                              className={
+                                'chat-user-img ' +
+                                chat.status +
+                                ' align-self-center me-1 ms-0'
+                              }
+                            >
+                              <img
+                                src={chat.profilePicture}
+                                className="rounded-circle avatar-xs"
+                                alt="immerse"
+                              />
+                              {chat.status && (
+                                <span className="user-status"></span>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="flex-grow-1 overflow-hidden">
+                            <h5 className="text-truncate font-size-15 mb-1 ms-3">
+                              {chat.name}
+                            </h5>
+                            <p className="chat-user-message font-size-14 text-truncate mb-0 ms-3">
+                              {chat.isTyping ? (
+                                <>
+                                  typing
+                                  <span className="animate-typing">
+                                    <span className="dot ms-1"></span>
+                                    <span className="dot ms-1"></span>
+                                    <span className="dot ms-1"></span>
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  {chat.messages &&
+                                  chat.messages.length > 0 &&
+                                  chat.messages[chat.messages.length - 1]
+                                    .isImageMessage === true ? (
+                                    <i className="ri-image-fill align-middle me-1"></i>
+                                  ) : null}
+                                  {chat.messages &&
+                                  chat.messages.length > 0 &&
+                                  chat.messages[chat.messages.length - 1]
+                                    .isFileMessage === true ? (
+                                    <i className="ri-file-text-fill align-middle me-1"></i>
+                                  ) : null}
+                                  {chat.messages && chat.messages.length > 0
+                                    ? chat.messages[chat.messages.length - 1]
+                                        .message
+                                    : null}
+                                </>
+                              )}
+                            </p>
+                          </div>
+                          <div className="font-size-11">
+                            {chat.messages && chat.messages.length > 0
+                              ? chat.messages[chat.messages.length - 1].time
+                              : null}
+                          </div>
+                          {chat.unRead === 0 ? null : (
+                            <div
+                              className="unread-message"
+                              id={'unRead' + chat.id}
+                            >
+                              <span className="badge badge-soft-danger rounded-pill">
+                                {chat.messages && chat.messages.length > 0
+                                  ? chat.unRead >= 20
+                                    ? chat.unRead + '+'
+                                    : chat.unRead
+                                  : ''}
                               </span>
                             </div>
-                            {chat.status && (
-                              <span className="user-status"></span>
-                            )}
-                          </div>
-                        ) : (
-                          <div
-                            className={
-                              'chat-user-img ' +
-                              chat.status +
-                              ' align-self-center me-1 ms-0'
-                            }
-                          >
-                            <img
-                              src={chat.profilePicture}
-                              className="rounded-circle avatar-xs"
-                              alt="immerse"
-                            />
-                            {chat.status && (
-                              <span className="user-status"></span>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex-grow-1 overflow-hidden">
-                          <h5 className="text-truncate font-size-15 mb-1 ms-3">
-                            {chat.name}
-                          </h5>
-                          <p className="chat-user-message font-size-14 text-truncate mb-0 ms-3">
-                            {chat.isTyping ? (
-                              <>
-                                typing
-                                <span className="animate-typing">
-                                  <span className="dot ms-1"></span>
-                                  <span className="dot ms-1"></span>
-                                  <span className="dot ms-1"></span>
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                {chat.messages &&
-                                chat.messages.length > 0 &&
-                                chat.messages[chat.messages.length - 1]
-                                  .isImageMessage === true ? (
-                                  <i className="ri-image-fill align-middle me-1"></i>
-                                ) : null}
-                                {chat.messages &&
-                                chat.messages.length > 0 &&
-                                chat.messages[chat.messages.length - 1]
-                                  .isFileMessage === true ? (
-                                  <i className="ri-file-text-fill align-middle me-1"></i>
-                                ) : null}
-                                {chat.messages && chat.messages.length > 0
-                                  ? chat.messages[chat.messages.length - 1]
-                                      .message
-                                  : null}
-                              </>
-                            )}
-                          </p>
+                          )}
                         </div>
-                        <div className="font-size-11">
-                          {chat.messages && chat.messages.length > 0
-                            ? chat.messages[chat.messages.length - 1].time
-                            : null}
-                        </div>
-                        {chat.unRead === 0 ? null : (
-                          <div
-                            className="unread-message"
-                            id={'unRead' + chat.id}
-                          >
-                            <span className="badge badge-soft-danger rounded-pill">
-                              {chat.messages && chat.messages.length > 0
-                                ? chat.unRead >= 20
-                                  ? chat.unRead + '+'
-                                  : chat.unRead
-                                : ''}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  </li>
-                )))
-                }
+                      </Link>
+                    </li>
+                  ))
+                )}
               </ul>
             </SimpleBar>
           </div>

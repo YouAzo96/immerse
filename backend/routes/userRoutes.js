@@ -359,6 +359,23 @@ router.get('/contacts', async (req, res) => {
   }
 });
 
+//Get All pending messages from db:
+
+router.get('/messages', async (req, res) => {
+  try {
+    const isValidUser = await verifiedUser(req);
+    if (!isValidUser) {
+      return res.status(401).json({ error: 'Invalid or Expired Token' });
+    }
+    const sql = `SELECT msg from messages where receiver_id = ?;`;
+    const [results, flds] = await db
+      .promise()
+      .query(sql, [isValidUser.user_id]);
+    if (results[0]) return res.status(200).json(results[0]);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
 // PUT (update) a user's information: image or status
 router.put('/update', async (req, res) => {
   try {
