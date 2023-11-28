@@ -71,6 +71,7 @@ export async function addConversation(loggedInId,user) {
         } else {
             await db.conversations.put({ loggedInId, users: [user] });
         }
+        window.location.reload();
     } catch (error) {
         console.error('Error adding conversation:', error);
     }
