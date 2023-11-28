@@ -54,9 +54,6 @@ const INIT_STATE = {
   contactsLoading: false,
   chatLoading: false,
 };
-//get state from local storage:
-const LOCAL_INIT_STATE = localStorage.getItem('users');
-if (LOCAL_INIT_STATE) INIT_STATE = { ...INIT_STATE, users: LOCAL_INIT_STATE };
 
 const Chat = (state = INIT_STATE, action) => {
   switch (action.type) {
