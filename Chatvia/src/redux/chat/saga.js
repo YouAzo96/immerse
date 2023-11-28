@@ -23,8 +23,10 @@ import { setActiveTab } from '../layout/actions';
 import { APIClient } from '../../apis/apiClient';
 import axios from 'axios';
 import { addConversation, getConversations } from '../../helpers/localStorage';
+import { getLoggedInUserInfo } from '../../helpers/authUtils';
 const create = new APIClient().create;
 const get = new APIClient().get;
+const loggedInUser = getLoggedInUserInfo();
 
 // fetch the contacts for the user
 function* fetchUserContacts() {
@@ -64,7 +66,7 @@ function* inviteContacts(action) {
 // Worker Sagas
 function* handleChatUser(action) {
   try {
-    const local = yield call(getConversations);
+    const local = yield call(getConversations, loggedInUser.user_id);
     console.log('local', local);
 
     if (!local) {
@@ -73,6 +75,7 @@ function* handleChatUser(action) {
       yield put(updateUserList(local));
     }
   } catch (error) {
+    window.location.reload();
     console.error('Error in handleChatUser saga:', error);
   }
 }
@@ -98,7 +101,7 @@ function* handleAddLoggedUser(action) {
       users.splice(0, 1);
     }
     const newUserId = users.findIndex((item) => item.id === user.id);
-    yield call(addConversation, user);
+    yield call(addConversation,loggedInUser.user_id, user);
     yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
   } catch (error) {

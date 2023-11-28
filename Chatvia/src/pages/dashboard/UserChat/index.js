@@ -84,6 +84,7 @@ function UserChat(props) {
     props.recentChatList[props.active_user].messages
   );
 
+
   useEffect(() => {
     const token = localStorage.getItem('authUser');
     if (socket && !token) {
@@ -258,6 +259,7 @@ function UserChat(props) {
     setchatMessages([...chatMessages, messageObj]);
 
     const user = await getConversationByUserId(
+      props.loggedUser.user_id,
       props.recentChatList[props.active_user].id
     );
 
@@ -291,8 +293,6 @@ function UserChat(props) {
 
     setchatMessages(filtered);
   };
-
-  console.log("activeUser: ", props.recentChatList[activeUser]);
 
   if (props.recentChatList[props.active_user].name === null) {
     return (
