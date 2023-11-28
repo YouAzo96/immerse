@@ -21,6 +21,7 @@ class Chats extends Component {
     this.state = {
       searchChat: '',
       recentChatList: this.props.recentChatList,
+      contactList: this.props.contactList,
     };
     this.openUserChat = this.openUserChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -144,7 +145,11 @@ class Chats extends Component {
           </div>
 
           {/* online users */}
-          <OnlineUsers contacts={this.props.contacts} />
+          <OnlineUsers
+            contacts={this.props.contacts}
+            recentChatList={this.props.recentChatList}
+          />
+
           {/* Start chat-message-list  */}
           <div>
             <h5 className="mb-3 px-3 font-size-16">Recent</h5>
@@ -156,7 +161,9 @@ class Chats extends Component {
               >
                 {this.state.recentChatList[0].name === null &&
                 this.state.recentChatList.length == 1 ? (
-                  <li className="active">There are no recent chats</li>
+                  <li className="active" style={{ textAlign: 'center' }}>
+                    There are no recent chats
+                  </li>
                 ) : (
                   this.state.recentChatList.map((chat, key) => (
                     <li

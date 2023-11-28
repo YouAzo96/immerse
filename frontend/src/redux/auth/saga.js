@@ -43,7 +43,6 @@ import {
   getLoggedInUserInfo,
   isUserAuthenticated,
   setLoggedInUser,
-  setLoggedInUserRefresh,
 } from '../../helpers/authUtils';
 
 import axios from 'axios';
@@ -72,6 +71,10 @@ function* login({ payload: { email, password, history } }) {
       setAuthorization(response.token);
       setLoggedInUser(response.token);
       setupInterceptor();
+      //send notifications subscription to backend:
+      const loggeduser = getLoggedInUserInfo();
+      const currentuser_name = loggeduser.fname + ' ' + loggeduser.lname;
+      subscribeUser(loggeduser.user_id, currentuser_name);
 
       yield put(loginUserSuccess(response.token));
     } else {
@@ -190,11 +193,7 @@ function* updateUserProfile(action) {
       const user = { ...currentUser, ...updatedUser };
 
       console.log('current and updated user: ' + JSON.stringify(user));
-      if (user.image) {
-        setLoggedInUserRefresh(response.token);
-      } else {
-        setLoggedInUser(response.token);
-      }
+      setLoggedInUser(response.token);
       console.log('response message is:', response.message);
       yield put(triggerAlert({ message: response.message, color: 'success' }));
       yield put(setUserProfile(user));
