@@ -1,16 +1,13 @@
 import Dexie from 'dexie';
-import { getLoggedInUserInfo } from './authUtils';
 
 const db = new Dexie('immerse');
-const loggedInId = getLoggedInUserInfo()?.user_id;
-console.log('loggedInId', loggedInId);
-
 db.version(1).stores({
   conversations: 'loggedInId, users',
 });
 
-export async function getConversations() {
+export async function getConversations(loggedInId) {
   try {
+    console.log('loggedInId', loggedInId);
     const conversation = await db.conversations.get(loggedInId);
     if (!conversation) {
       return null;
@@ -25,7 +22,7 @@ export async function getConversations() {
   }
 }
 
-export async function getConversationByUserId(userId) {
+export async function getConversationByUserId(loggedInId, userId) {
   try {
     const conversation = await db.conversations.get(loggedInId);
     console.log('conversation', conversation.users);
@@ -59,7 +56,7 @@ export async function getConversationByUserId(userId) {
   }
 }
 
-export async function addConversation(user) {
+export async function addConversation(loggedInId, user) {
   try {
     const conversation = await db.conversations.get(loggedInId);
     if (conversation) {
@@ -82,12 +79,14 @@ export async function addConversation(user) {
     console.error('Error adding conversation:', error);
   }
 }
-export async function updateConversation(user) {
+
+export async function updateConversation(loggedInId, user) {
   try {
     const conversation = await db.conversations.get(loggedInId);
     const existingUserIndex = conversation.users.findIndex(
       (existingUser) => existingUser.id === user.id
     );
+
     if (existingUserIndex !== -1) {
       // If user is already in the array, update the message
       conversation.users[existingUserIndex].messages = user.messages;
@@ -103,7 +102,8 @@ export async function updateConversation(user) {
     );
   }
 }
-export async function deleteConversation() {
+
+export async function deleteConversation(loggedInId) {
   try {
     await db.conversations.delete(loggedInId);
   } catch (error) {
@@ -114,7 +114,7 @@ export async function deleteConversation() {
   }
 }
 
-export async function addMessage(userId, message) {
+export async function addMessage(loggedInId, userId, message) {
   try {
     const conversation = await db.conversations.get(loggedInId);
     const user = conversation.users.find((user) => user.id === userId);
@@ -128,7 +128,7 @@ export async function addMessage(userId, message) {
   }
 }
 
-export async function deleteMessage(userId, messageId) {
+export async function deleteMessage(loggedInId, userId, messageId) {
   try {
     const conversation = await db.conversations.get(loggedInId);
     const user = conversation.users.find((user) => user.id === userId);

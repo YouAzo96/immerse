@@ -39,6 +39,7 @@ import {
 
 import axios from 'axios';
 import isEqual from 'lodash/isEqual';
+import { initializeDatabase } from '../../helpers/localStorage';
 
 /**
  * Sets the session

@@ -64,12 +64,9 @@ const Chat = (state = INIT_STATE, action) => {
       console.log('UpdateUserList: ' , action.payload);
       if (action.payload === undefined){
         return { ...state, chatLoading: false };
+      } else {
+        return { ...state, chatLoading: false, users: action.payload };
       }
-      return {
-        ...state,
-        chatLoading: false,
-        users: action.payload,
-      };
 
     case ACTIVE_USER:
       console.log('ActiveUser: ' + action.payload);
