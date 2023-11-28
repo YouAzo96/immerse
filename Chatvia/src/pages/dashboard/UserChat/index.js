@@ -41,6 +41,7 @@ import {
   getConversationByUserId,
   updateConversation,
 } from '../../../helpers/localStorage';
+import { PacmanLoader } from 'react-spinners';
 
 //Get Closest STUN Server:
 const GEO_LOC_URL =
@@ -188,10 +189,12 @@ function UserChat(props) {
 
   useEffect(() => {
     setchatMessages(props.recentChatList[props.active_user].messages);
+    if (ref.current) {
     ref.current.recalculate();
-    if (ref.current.el) {
-      ref.current.getScrollElement().scrollTop =
-        ref.current.getScrollElement().scrollHeight;
+      if (ref.current.el) {
+        ref.current.getScrollElement().scrollTop =
+          ref.current.getScrollElement().scrollHeight;
+      }
     }
   }, [props.active_user, props.recentChatList]);
 
@@ -291,10 +294,16 @@ function UserChat(props) {
 
   console.log("activeUser: ", props.recentChatList[activeUser]);
 
-  return (
-    <React.Fragment>
-    
-      <div className="user-chat w-100 overflow-hidden">
+  if (props.recentChatList[props.active_user].name === null) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>No conversations available</p>
+      </div>
+    );
+  } else {
+    return (
+      <React.Fragment>
+        <div className="user-chat w-100 overflow-hidden">
         <div className="d-lg-flex">
           <div
             className={
@@ -605,8 +614,9 @@ function UserChat(props) {
           />
         </div>
       </div>
-    </React.Fragment>
-  );
+      </React.Fragment>
+    );
+  }
 }
 
 const mapStateToProps = (state) => {
