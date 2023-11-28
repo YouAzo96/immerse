@@ -61,7 +61,7 @@ const Chat = (state = INIT_STATE, action) => {
       return { ...state, chatLoading: true };
 
     case UPDATE_USER_LIST:
-      console.log('UpdateUserList: ' , action.payload);
+      // console.log('UpdateUserList: ' , action.payload);
       if (action.payload === undefined){
         return { ...state, chatLoading: false };
       } else {
@@ -69,7 +69,7 @@ const Chat = (state = INIT_STATE, action) => {
       }
 
     case ACTIVE_USER:
-      console.log('ActiveUser: ' + action.payload);
+      // console.log('ActiveUser: ' + action.payload);
       return {
         ...state,
         active_user: action.payload,
@@ -114,6 +114,7 @@ const Chat = (state = INIT_STATE, action) => {
             name: contact.fname + ' ' + contact.lname,
             email: contact.email,
             about: contact.about,
+            last_seen: contact.last_seen,
             image: contact.image,
           },
         })),

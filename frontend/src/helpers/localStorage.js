@@ -8,7 +8,7 @@ import Dexie from 'dexie';
 
 export async function getConversations(loggedInId) {
     try {
-        console.log('loggedInId', loggedInId);
+        // console.log('loggedInId', loggedInId);
         const conversation = await db.conversations.get(loggedInId);
         if (!conversation) {
             return null;

@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 //Import Images
 import logodark from "../../assets/images/logo-dark.png";
 import logolight from "../../assets/images/logo-light.png";
-import avatar1 from "../../assets/images/users/avatar-1.jpg";
 
 function LockScreen(props) {
     const dispatch = useDispatch();

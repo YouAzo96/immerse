@@ -15,8 +15,6 @@ import { activeUser, closeUserSidebar } from "../redux/actions";
 //i18n
 import { useTranslation } from 'react-i18next';
 
-//image
-import avatar7 from "../assets/images/users/avatar-7.jpg";
 
 function UserProfileSidebar(props) {
 

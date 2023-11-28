@@ -333,11 +333,11 @@ router.get('/contacts', async (req, res) => {
       return res.status(401).json({ error: 'Invalid or Expired Token' });
     }
     const sql = `
-      SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
+      SELECT u.user_id, u.fname, u.lname, u.email, u.last_seen, u.about, u.image FROM user u
       JOIN userhascontact uc ON u.user_id = uc.contact_id
       WHERE uc.user_id = ?
       UNION
-      SELECT u.user_id, u.fname, u.lname, u.email, u.about, u.image FROM user u
+      SELECT u.user_id, u.fname, u.lname, u.email, u.last_seen, u.about, u.image FROM user u
       JOIN userhascontact uc ON u.user_id = uc.user_id
       WHERE uc.contact_id = ?
     `;

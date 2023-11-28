@@ -145,8 +145,7 @@ class Chats extends Component {
           </div>
 
           {/* online users */}
-          <OnlineUsers />
-
+          <OnlineUsers contacts={this.props.contacts} />
           {/* Start chat-message-list  */}
           <div>
             <h5 className="mb-3 px-3 font-size-16">Recent</h5>

@@ -67,7 +67,7 @@ function* inviteContacts(action) {
 function* handleChatUser(action) {
   try {
     const local = yield call(getConversations, loggedInUser.user_id);
-    console.log('local', local);
+    // console.log('local', local);
 
     if (!local) {
       yield put(updateUserList());
