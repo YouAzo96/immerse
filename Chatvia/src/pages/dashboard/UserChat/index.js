@@ -36,7 +36,6 @@ import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 //i18n
 import { useTranslation } from 'react-i18next';
 
-
 import {
   getConversationByUserId,
   updateConversation,
@@ -289,11 +288,10 @@ function UserChat(props) {
     setchatMessages(filtered);
   };
 
-  console.log("activeUser: ", props.recentChatList[activeUser]);
+  console.log('activeUser: ', props.recentChatList[activeUser]);
 
   return (
     <React.Fragment>
-    
       <div className="user-chat w-100 overflow-hidden">
         <div className="d-lg-flex">
           <div
