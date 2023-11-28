@@ -58,17 +58,20 @@ export async function getConversationByUserId(userId) {
     }
 }
 
-
 export async function addConversation(user) {
     try {
         const conversation = await db.conversations.get(loggedInId);
         if (conversation) {
             // Check if user is already in the array
-            if (!conversation.users.some(existingUser => existingUser.id === user.id)) {
+            const existingUser = conversation.users.find(existingUser => existingUser.id === user.id);
+            if (existingUser) {
+                // If user is already in the array, return the existing user
+                return existingUser;
+            } else {
                 // If not, add it
                 conversation.users.push(user);
+                await db.conversations.put(conversation);
             }
-            await db.conversations.put(user);
         } else {
             await db.conversations.put({ loggedInId, users: [user] });
         }
@@ -76,7 +79,6 @@ export async function addConversation(user) {
         console.error('Error adding conversation:', error);
     }
 }
-
 export async function updateConversation(user) {
     try {
         const conversation = await db.conversations.get(loggedInId);
@@ -86,7 +88,7 @@ export async function updateConversation(user) {
             conversation.users[existingUserIndex].messages = user.messages;
         } else {
             // If not, add the user
-            conversation.users.push(user);
+            conversation.users.push(user.users);
         }
         await db.conversations.put(conversation);
     } catch (error) {

@@ -166,7 +166,6 @@ class Contacts extends Component {
       isGroup: false,
       messages: [],
     };
-
     this.props.addLoggedinUser(newUser);
   };
 
