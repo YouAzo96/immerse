@@ -36,6 +36,12 @@ import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 //i18n
 import { useTranslation } from 'react-i18next';
 
+
+import {
+  getConversationByUserId,
+  updateConversation,
+} from '../../../helpers/localStorage';
+
 //Get Closest STUN Server:
 const GEO_LOC_URL =
   'https://raw.githubusercontent.com/pradt2/always-online-stun/master/geoip_cache.txt';
@@ -57,12 +63,6 @@ const closestAddr = (await (await fetch(IPV4_URL)).text())
     distA <= distB ? [addrA, distA] : [addrB, distB]
   )[0];
 console.log(closestAddr);
-import {
-  getConversationByUserId,
-  getUser,
-  updateConversation,
-  updateUser,
-} from '../../../helpers/localStorage';
 
 function UserChat(props) {
   const user = props.loggedUser;
@@ -260,7 +260,7 @@ function UserChat(props) {
 
     user.messages = [...user.messages, messageObj];
 
-    console.log('user: ', user);
+    // console.log('user: ', user);
 
     await updateConversation(user);
 
@@ -289,10 +289,11 @@ function UserChat(props) {
     setchatMessages(filtered);
   };
 
-  console.log('user in index: ', user);
+  console.log("activeUser: ", props.recentChatList[activeUser]);
 
   return (
     <React.Fragment>
+    
       <div className="user-chat w-100 overflow-hidden">
         <div className="d-lg-flex">
           <div

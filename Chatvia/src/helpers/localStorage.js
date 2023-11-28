@@ -3,7 +3,8 @@ import { getLoggedInUserInfo } from './authUtils';
 
 
 const db = new Dexie('immerse');
-const loggedInId = getLoggedInUserInfo().user_id;
+const loggedInId = getLoggedInUserInfo()?.user_id;
+console.log('loggedInId', loggedInId);
 
 
 db.version(1).stores({
@@ -18,6 +19,10 @@ export async function getConversations() {
         }
         return conversation.users;
     } catch (error) {
+        if (error.name === 'DataError') {
+            console.warn(`No conversations found for user with id ${loggedInId}`);
+            return null;
+        }
         console.error(`Error getting conversations:`, error);
     }
 }
