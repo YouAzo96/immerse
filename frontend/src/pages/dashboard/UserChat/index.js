@@ -29,7 +29,6 @@ import FileList from './FileList';
 //actions
 import { openUserSidebar, setFullUser } from '../../../redux/actions';
 
-
 //i18n
 import { useTranslation } from 'react-i18next';
 
@@ -79,7 +78,6 @@ function UserChat(props) {
   const [chatMessages, setchatMessages] = useState(
     props.recentChatList[props.active_user].messages
   );
-
 
   useEffect(() => {
     const token = localStorage.getItem('authUser');
@@ -201,7 +199,11 @@ function UserChat(props) {
     var messageObj = null;
 
     let d = new Date();
-    var n = d.toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit'});
+    var n = d.toLocaleTimeString([], {
+      hour12: true,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
     //matches the message type is text, file or image, and create object according to it
     switch (type) {

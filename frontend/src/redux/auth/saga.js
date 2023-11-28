@@ -1,4 +1,12 @@
-import { all, call, fork, put, select, takeEvery, delay } from 'redux-saga/effects';
+import {
+  all,
+  call,
+  fork,
+  put,
+  select,
+  takeEvery,
+  delay,
+} from 'redux-saga/effects';
 import {
   APIClient,
   setAuthorization,
@@ -139,7 +147,6 @@ function* fetchUserProfile() {
       },
     });
     const loggedUser = getLoggedInUserInfo();
-    
 
     const user = {
       ...response,
@@ -185,10 +192,11 @@ function* updateUserProfile(action) {
       console.log('current and updated user: ' + JSON.stringify(user));
       if (user.image) {
         setLoggedInUserRefresh(response.token);
-      }else{
-      setLoggedInUser(response.token);
-      }console.log('response message is:', response.message)
-      yield put (triggerAlert({message: response.message, color: 'success'}));
+      } else {
+        setLoggedInUser(response.token);
+      }
+      console.log('response message is:', response.message);
+      yield put(triggerAlert({ message: response.message, color: 'success' }));
       yield put(setUserProfile(user));
     } else {
       console.log('No changes to update');

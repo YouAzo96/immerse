@@ -75,8 +75,7 @@ io.on('connection', async (socket) => {
   const token =
     socket.handshake.query.userId == 'null'
       ? null
-      : socket.handshake.query.userId.slice(1, -1);
-  //console.log('Backend: ' + token);
+      : socket.handshake.query.userId;
   if (!token) {
     return;
   }
@@ -86,49 +85,59 @@ io.on('connection', async (socket) => {
   if (user_id) {
     //add socket to store:
     sockets.set(user_id, socket);
-    console.log('socket added to store');
-    const socketId = socket.id;
-
-    const sql = 'update user set socket_id = ? where user_id = ?';
-    db.promise()
-      .execute(sql, [socketId, user_id])
-      .then(() => {
-        console.log(`User connected: ${user_id}, Socket ID: ${socketId}`);
-      })
-      .catch((error) => {
-        console.error('Error storing socket information:', error);
-      });
+    console.log('socket added for ', user_id, socket.id);
   }
-  // Handle signaling events (offer, answer, ice candidates)
-  socket.on('offer', (data) => {
-    io.to(data.to).emit('offer', { from: socket.id, offer: data.offer });
+  // Listen for chat messages
+  socket.on('chat message', async (data) => {
+    const { sender, receiver, message } = data; //stringify msg it at front end
+    const contact_socket = sockets.get(receiver);
+    if (contact_socket) {
+      //contact has an open socket, emit msg to them:
+      message.userType = 'receiver';
+      contact_socket.emit('chat message', {
+        sender: sender,
+        message: message,
+      });
+    } else {
+      //store to db:
+      try {
+        const [currentMsgsInDb, flds] = await db
+          .promise()
+          .query(
+            'SELECT msg from messages where sender_id = ? and receiver_id=?;',
+            [sender, receiver]
+          );
+        if (currentMsgsInDb[0]) {
+          /*{
+            {
+              id: 1,
+              message: 'hey',
+                time: '00:9',
+              userType: 'sender',
+              image: null,
+                isFileMessage: false,
+              isImageMessage: false
+    },
+  }*/
+          console.log('current msgs in db: ', currentMsgsInDb[0]);
+        } else {
+          await db
+            .promise()
+            .query('INSERT into messages values (?,?,?)', [
+              sender,
+              receiver,
+              JSON.stringify(message),
+            ]);
+        }
+      } catch (error) {
+        console.log('Failed to save msgs: ', error);
+      }
+    }
   });
-
-  socket.on('answer', (data) => {
-    io.to(data.to).emit('answer', { from: socket.id, answer: data.answer });
-  });
-
-  socket.on('ice-candidate', (data) => {
-    console.log('New ICE candidate: ' + data.iceCandidate);
-    io.to(data.to).emit('ice-candidate', {
-      from: socket.id,
-      iceCandidate: data.iceCandidate,
-    });
-  });
-
   // Handle user disconnect
   socket.on('disconnect', () => {
     if (user_id) {
       sockets.delete(user_id); //delete socket from store
-      const sql = 'update user set socket_id = NULL WHERE user_id = ?';
-      db.promise()
-        .execute(sql, [user_id])
-        .then(() => {
-          console.log(`User disconnected: ${user_id}, Socket ID: ${socket.id}`);
-        })
-        .catch((error) => {
-          console.error('Error removing socket information:', error);
-        });
     }
   });
 });
