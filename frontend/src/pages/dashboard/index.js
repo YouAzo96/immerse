@@ -66,21 +66,17 @@ class Index extends Component {
 
           // Check for notifications permission
           if (Notification.permission === 'granted') {
-            if (!isSubscribed) {
+            if (!isSubscribed && this.props.loggedUser && this.props.loggedUser.user_id) {
               const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey:
-                  'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
+                applicationServerKey: 'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
               });
 
               // Send the subscription details to your server
               await create(`${gatewayServiceUrl}/notify`, {
                 subscription: subscription,
                 user_id: this.props.loggedUser.user_id,
-                user_name:
-                  this.props.loggedUser.fname +
-                  ' ' +
-                  this.props.loggedUser.lname,
+                user_name: this.props.loggedUser.fname + ' ' + this.props.loggedUser.lname,
               });
 
               isSubscribed = true;

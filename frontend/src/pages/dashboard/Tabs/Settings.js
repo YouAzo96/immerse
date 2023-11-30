@@ -26,7 +26,7 @@ import { PacmanLoader } from 'react-spinners';
 function Settings(props) {
   const dispatch = useDispatch();
   const user = props.user;
-  const alert = useSelector(state => state.Auth.alert);
+  const alerts = useSelector(state => state.Auth.alert);
   const [fname, setFname] = useState(user.fname);
   const [lname, setLname] = useState(user.lname);
   const [email, setemail] = useState(user.email);
@@ -200,7 +200,7 @@ function Settings(props) {
           style={{ maxHeight: '100%' }}
           className="p-4 user-profile-desc"
         >
-          {alert.visible && <Alert color={alert.color}>{alert.message}</Alert>}
+          {alerts.visible && <Alert color={alerts.color}>{alerts.message}</Alert>}
           <div id="profile-setting-accordion" className="custom-accordion">
             <Card className="accordion-item border mb-2">
               <CustomCollapse

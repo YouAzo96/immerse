@@ -192,7 +192,7 @@ router.get('/accept-contact/:sender/:receiver', async (req, res) => {
         title: 'New Contact Added',
         body: `${Receiver[0].fname} ${Receiver[0].lname} Accepted Your Invitation!`,
       },
-      token: SenderDeviceToken[0].device_token,
+      token: SenderDeviceToken[0].device_token, 
     },
   });
   return res

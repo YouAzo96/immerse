@@ -103,7 +103,7 @@ function UserChat(props) {
               id: copyallUsers.length + 1,
               name: contact.children.name,
               profilePicture: contact.children.image || blankuser || null,
-              status: 'online',
+              status: contact.children.last_seen,
               unRead: 1,
               roomType: 'contact',
               isGroup: false,
@@ -111,7 +111,8 @@ function UserChat(props) {
             };
 
             copyallUsers.push(newUser);
-            //props.addLoggedinUser(newUser);
+            // props.addLoggedinUser(newUser);
+            console.log('new users list: ', newUser);
             props.setFullUser(copyallUsers);
           }
         }
@@ -141,7 +142,7 @@ function UserChat(props) {
     var messageObj = null;
 
     let d = new Date();
-    var n = d.getSeconds();
+    var n = d.getHours() + ':' + d.getMinutes();
 
     //matches the message type is text, file or image, and create object according to it
     switch (type) {
@@ -149,7 +150,7 @@ function UserChat(props) {
         messageObj = {
           id: chatMessages.length + 1,
           message: message,
-          time: '00:' + n,
+          time: n,
           userType: 'sender',
           image: null,
           isFileMessage: false,
@@ -163,7 +164,7 @@ function UserChat(props) {
           message: 'file',
           fileMessage: message.name,
           size: message.size,
-          time: '00:' + n,
+          time: n,
           userType: 'sender',
           image: avatar4,
           isFileMessage: true,
@@ -179,7 +180,7 @@ function UserChat(props) {
           message: 'image',
           imageMessage: imageMessage,
           size: message.size,
-          time: '00:' + n,
+          time: n,
           userType: 'sender',
           image: avatar4,
           isImageMessage: true,
@@ -527,20 +528,14 @@ function UserChat(props) {
                               )}
                             </div>
                             {chatMessages[key + 1] ? (
-                              chatMessages[key].userType ===
-                              chatMessages[key + 1].userType ? null : (
+                              chatMessages[key].userType === chatMessages[key + 1].userType ? null : (
                                 <div className="conversation-name">
-                                  {chat.userType === 'receiver'
-                                    ? props.recentChatList[props.active_user]
-                                        .name
-                                    : 'Admin'}
+                                  {chat.userType === 'receiver' ? props.recentChatList[props.active_user].fname : user.fname}
                                 </div>
                               )
                             ) : (
                               <div className="conversation-name">
-                                {chat.userType === 'sender'
-                                  ? user.fname
-                                  : 'Admin'}
+                                {chat.userType === 'sender' ? user.fname : props.recentChatList[props.active_user].fname}
                               </div>
                             )}
                           </div>
