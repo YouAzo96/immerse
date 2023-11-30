@@ -58,6 +58,7 @@ app.post('/notify', async (req, res) => {
   await request(requestOptions)
     .then((response) => {
       if (response.success) {
+        console.log('subscription sent to notifications api');
         return res.status(200).json(response.success);
       } else {
         return res.status(400).json({ error: 'Failed to subscribe' });

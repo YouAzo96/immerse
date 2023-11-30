@@ -46,6 +46,7 @@ import {
   updateConversation,
 } from '../../../helpers/localStorage';
 import { getLoggedInUser } from '../../../helpers/authUtils';
+import config from '../../../config';
 
 function UserChat(props) {
   const user = props.loggedUser;
@@ -69,7 +70,7 @@ function UserChat(props) {
 
     // Check if the socket instance already exists in the ref
     if (!socketRef.current && token) {
-      const newSocket = io('http://localhost:3001', {
+      const newSocket = io(config.API_URL, {
         query: {
           userId: token,
         },

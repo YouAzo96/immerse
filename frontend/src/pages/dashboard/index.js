@@ -8,11 +8,12 @@ import { fetchUserProfile } from '../../redux/auth/actions';
 import { fetchUserContacts, chatUser } from '../../redux/chat/actions';
 import { bindActionCreators } from 'redux';
 import { APIClient } from '../../apis/apiClient';
-const gatewayServiceUrl = 'http://localhost:3001';
+import config from '../../config';
+const gatewayServiceUrl = config.API_URL;
 
 const create = new APIClient().create;
 //send ONLINE status:
-/*
+
 const subscribeUser = async (userId, user_name) => {
   try {
     if ('serviceWorker' in navigator) {
@@ -50,11 +51,10 @@ const subscribeUser = async (userId, user_name) => {
   } catch (error) {
     console.log('Error in Push Notif Registration: ', error);
   }
-};*/
+};
 class Index extends Component {
+  isSubscribed = false;
   async componentDidMount() {
-    let isSubscribed = false;
-
     if ('serviceWorker' in navigator) {
       await navigator.serviceWorker
         .register('./serviceWorker.js', { scope: '/dashboard/' }) // Adjust the scope based on your application's structure
@@ -66,7 +66,11 @@ class Index extends Component {
 
           // Check for notifications permission
           if (Notification.permission === 'granted') {
-            if (!isSubscribed) {
+            if (
+              !this.isSubscribed &&
+              this.props.loggedUser &&
+              this.props.loggedUser.user_id
+            ) {
               const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey:
@@ -82,8 +86,7 @@ class Index extends Component {
                   ' ' +
                   this.props.loggedUser.lname,
               });
-
-              isSubscribed = true;
+              this.isSubscribed = true;
             }
           } else {
             console.log('Notification permission denied.');
@@ -96,6 +99,7 @@ class Index extends Component {
           );
         });
     }
+
     this.props.fetchUserProfile();
     this.props.fetchUserContacts();
     this.props.chatUser();
@@ -125,17 +129,17 @@ class Index extends Component {
       <React.Fragment>
         {/* chat left sidebar */}
         <ChatLeftSidebar
-          loggedUser={loggedUser}
-          userContacts={userContacts}
+          loggedUser={this.props.loggedUser}
+          userContacts={this.props.userContacts}
           recentChatList={this.props.users}
         />
 
         {/* user chat */}
         <UserChat
-          loggedUser={loggedUser}
+          loggedUser={this.props.loggedUser}
           recentChatList={this.props.users}
           active_user={this.props.active_user}
-          userContacts={userContacts}
+          userContacts={this.props.userContacts}
         />
       </React.Fragment>
     );
