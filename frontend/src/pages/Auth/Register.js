@@ -22,7 +22,7 @@ import {
 } from 'reactstrap';
 
 //Import action
-import { registerUser, apiError } from '../../redux/actions';
+import { registerUser, apiError, loginUser } from '../../redux/actions';
 
 //i18n
 import { useTranslation } from 'react-i18next';

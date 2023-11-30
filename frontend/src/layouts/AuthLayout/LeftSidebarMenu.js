@@ -102,7 +102,6 @@ function LeftSidebarMenu(props) {
             height: '100vh',
           }}
         >
-          <PacmanLoader />
         </div>
       ) : (
         <div className="side-menu flex-lg-column me-lg-1">
