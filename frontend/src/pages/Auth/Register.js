@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { connect, useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import withRouter from '../../components/withRouter';
 
 import { useFormik } from 'formik';
@@ -37,6 +37,8 @@ import { createSelector } from 'reselect';
  * @param {*} props
  */
 const Register = (props) => {
+  const { referrer } = useParams();
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   /* intilize t variable for multi language implementation */
@@ -51,6 +53,7 @@ const Register = (props) => {
       lname: '',
       email: '',
       password: '',
+      referrer: referrer || null,
     },
     validationSchema: Yup.object({
       fname: Yup.string().required('Required'),
@@ -77,9 +80,9 @@ const Register = (props) => {
   useEffect(() => {
     console.log('success is:', success);
     if (success) {
-        setTimeout(() => navigate("/login"), 3000);
+      navigate('/dashboard');
     }
-}, [dispatch, success, error, user, navigate]);
+  }, [dispatch, success, error, user, navigate]);
 
   useEffect(() => {
     dispatch(apiError(''));
@@ -125,9 +128,7 @@ const Register = (props) => {
                     }}
                   >
                     {user && user ? (
-                      <Alert color="success">
-                        Register User Successfully
-                      </Alert>
+                      <Alert color="success">Register User Successfully</Alert>
                     ) : null}
 
                     {error && error ? (

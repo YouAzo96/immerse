@@ -4,7 +4,6 @@ import { isUserAuthenticated } from '../helpers/authUtils';
 import { logoutUser } from '../redux/auth/actions';
 import sagas from '../redux/sagas';
 
-
 // default
 axios.defaults.baseURL = config.API_URL;
 
@@ -28,7 +27,10 @@ axios.interceptors.response.use(
 const setupInterceptor = () => {
   axios.interceptors.request.use(
     (config) => {
-      console.log('intercepting to verify token', isUserAuthenticated() && config.url !== '/login');
+      console.log(
+        'intercepting to verify token',
+        isUserAuthenticated() && config.url !== '/login'
+      );
       if (!isUserAuthenticated()) {
         sagas.dispatch(logoutUser());
       }
@@ -36,7 +38,7 @@ const setupInterceptor = () => {
     },
     (error) => Promise.reject(error)
   );
-}
+};
 
 /**
  * Sets the default authorization

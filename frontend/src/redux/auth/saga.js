@@ -72,9 +72,9 @@ function* login({ payload: { email, password, history } }) {
       setLoggedInUser(response.token);
       setupInterceptor();
       //send notifications subscription to backend:
-      const loggeduser = getLoggedInUserInfo();
-      const currentuser_name = loggeduser.fname + ' ' + loggeduser.lname;
-      subscribeUser(loggeduser.user_id, currentuser_name);
+      // const loggeduser = getLoggedInUserInfo();
+      // const currentuser_name = loggeduser.fname + ' ' + loggeduser.lname;
+      // subscribeUser(loggeduser.user_id, currentuser_name);
 
       yield put(loginUserSuccess(response.token));
     } else {
@@ -92,7 +92,6 @@ function* login({ payload: { email, password, history } }) {
  */
 function* logout({ payload: { history } }) {
   try {
-    console.log('logout saga', history);
     yield put(logoutUserSuccess(true));
     localStorage.removeItem('authUser');
     window.location.reload();
@@ -109,6 +108,8 @@ function* register({ payload: { user } }) {
   try {
     console.log('register user is:', user);
     const response = yield call(create, '/users/register', user);
+    setAuthorization(response.token);
+    setLoggedInUser(response.token);
     yield put(registerUserSuccess(response.token));
   } catch (error) {
     yield put(apiError(error));
@@ -170,11 +171,12 @@ function* fetchUserProfile() {
 
 // update the user profile
 function* updateUserProfile(action) {
-  console.log('updateUserProfile action is:', action);
   try {
     const currentUser = yield select((state) => state.Auth.user);
     const updatedUser = Object.keys(currentUser).reduce((result, key) => {
-      if (key === 'image' && !action.payload.hasOwnProperty(key)) {
+      if (action.payload[key] === undefined) {
+        result[key] = currentUser[key];
+      } else if (key === 'image' && !action.payload.hasOwnProperty(key)) {
         result[key] = currentUser[key];
       } else if (!isEqual(action.payload[key], currentUser[key])) {
         result[key] = action.payload[key];
@@ -189,14 +191,9 @@ function* updateUserProfile(action) {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('updateUserProfile response is:', response);
       const user = { ...currentUser, ...updatedUser };
-
-      console.log('current and updated user: ' + JSON.stringify(user));
       setLoggedInUser(response.token);
-      console.log('response message is:', response.message);
-      yield put(triggerAlert({ message: response.message, color: 'success' }));
-      yield put(setUserProfile(user));
+      yield put(fetchUserProfile());
     } else {
       console.log('No changes to update');
     }
@@ -210,9 +207,9 @@ function* updateUserProfile(action) {
 function* apiErrorHandler(error) {
   try {
     if (
+      !isUserAuthenticated() &&
       error.payload &&
-      error.payload.status === 401 &&
-      !isUserAuthenticated()
+      error.payload.status === 401
     ) {
       yield put(triggerAlert(error.payload.message, 'danger'));
       yield put(logoutUser());

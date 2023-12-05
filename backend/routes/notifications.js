@@ -138,14 +138,23 @@ app.post('/notify', async (req, res) => {
     switch (eventType) {
       case 'contactAdded':
         console.log('ContactAdded Handled' + eventData.message);
-        // message: {
-        //   notification: {
-        //     title: 'New Contact Added',
-        //     body: `${Receiver[0].fname} ${Receiver[0].lname} Accepted Your Invitation!`,
-        //   },
-        //   token: SenderDeviceToken[0].device_token,
-        // },
-
+        const subscription = eventData.subscription;
+        if (subscription) {
+          webpush
+            .sendNotification(
+              subscription,
+              JSON.stringify({
+                message: 'New Contact Added!',
+                eventType: 'contactAdded',
+              })
+            )
+            .then(() => {
+              console.log('User Notified!');
+            })
+            .catch((err) => {
+              console.log('User Not Notified! ', err);
+            });
+        }
         break;
       case 'imLoggedIn': //event sent to users who just logged by their contacts.
         try {

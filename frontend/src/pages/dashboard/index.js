@@ -5,106 +5,30 @@ import ChatLeftSidebar from './ChatLeftSidebar';
 import UserChat from './UserChat/index';
 import { connect } from 'react-redux';
 import { fetchUserProfile } from '../../redux/auth/actions';
-import { fetchUserContacts, chatUser } from '../../redux/chat/actions';
+import {
+  fetchUserContacts,
+  chatUser,
+  fetchUserMessages,
+} from '../../redux/chat/actions';
 import { bindActionCreators } from 'redux';
 import { APIClient } from '../../apis/apiClient';
 import config from '../../config';
-const gatewayServiceUrl = config.API_URL;
+const gatewayServiceUrl = config.BACKEND_URL;
 
 const create = new APIClient().create;
 //send ONLINE status:
-
-const subscribeUser = async (userId, user_name) => {
-  try {
-    if ('serviceWorker' in navigator) {
-      await navigator.serviceWorker
-        .register('./serviceWorker.js', { scope: '/dashboard/' }) // Adjust the scope based on your application's structure
-        .then(async (registration) => {
-          console.log(
-            'Service Worker registered with scope:',
-            registration.scope
-          );
-          // Check for notifications permission
-          if (Notification.permission === 'granted') {
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey:
-                'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
-            });
-            //Send the subscription details to your server
-            await create(`${gatewayServiceUrl}/notify`, {
-              subscription: subscription,
-              user_id: userId,
-              user_name: user_name,
-            });
-          } else {
-            console.log('Notification permission denied.');
-          }
-        })
-        .catch((error) => {
-          console.error(
-            'Service Worker registration or subscription failed:',
-            error
-          );
-        });
-    }
-  } catch (error) {
-    console.log('Error in Push Notif Registration: ', error);
-  }
-};
 class Index extends Component {
   isSubscribed = false;
+  hasFetchedMessages = false;
   async componentDidMount() {
-    if ('serviceWorker' in navigator) {
-      await navigator.serviceWorker
-        .register('./serviceWorker.js', { scope: '/dashboard/' }) // Adjust the scope based on your application's structure
-        .then(async (registration) => {
-          console.log(
-            'Service Worker registered with scope:',
-            registration.scope
-          );
-
-          // Check for notifications permission
-          if (Notification.permission === 'granted') {
-            if (
-              !this.isSubscribed &&
-              this.props.loggedUser &&
-              this.props.loggedUser.user_id
-            ) {
-              const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey:
-                  'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
-              });
-
-              // Send the subscription details to your server
-              await create(`${gatewayServiceUrl}/notify`, {
-                subscription: subscription,
-                user_id: this.props.loggedUser.user_id,
-                user_name:
-                  this.props.loggedUser.fname +
-                  ' ' +
-                  this.props.loggedUser.lname,
-              });
-              this.isSubscribed = true;
-            }
-          } else {
-            console.log('Notification permission denied.');
-          }
-        })
-        .catch((error) => {
-          console.error(
-            'Service Worker registration or subscription failed:',
-            error
-          );
-        });
-    }
-
     this.props.fetchUserProfile();
     this.props.fetchUserContacts();
     this.props.chatUser();
+    if (!this.hasFetchedMessages) {
+      this.props.fetchUserMessages();
+      this.hasFetchedMessages = true; // Mark messages as fetched
+    }
   }
-
   render() {
     const { loading, loggedUser, userContacts, chatLoading } = this.props;
     document.title = 'Chat | Immerse: Real-Time Chat App';
@@ -161,7 +85,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators(
-    { fetchUserProfile, fetchUserContacts, chatUser },
+    { fetchUserProfile, fetchUserContacts, fetchUserMessages, chatUser },
     dispatch
   );
 };

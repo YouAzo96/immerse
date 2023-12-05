@@ -26,8 +26,8 @@ const INIT_STATE = {
   alert: {
     visible: false,
     message: '',
-    color: 'danger'
-  }
+    color: 'danger',
+  },
 };
 
 const Auth = (state = INIT_STATE, action) => {
@@ -40,7 +40,13 @@ const Auth = (state = INIT_STATE, action) => {
     case REGISTER_USER:
       return { ...state, loading: true };
     case REGISTER_USER_SUCCESS:
-      return { ...state, user: action.payload, loading: false, error: null, success: true };
+      return {
+        ...state,
+        user: action.payload,
+        loading: false,
+        error: null,
+        success: true,
+      };
 
     case LOGOUT_USER_SUCCESS:
       localStorage.removeItem('activeTab');
@@ -79,36 +85,36 @@ const Auth = (state = INIT_STATE, action) => {
       return { ...state, loading: true };
 
     case FETCH_USER_PROFILE_SUCCESS:
-        return { ...state,
-              user: {
-                user_id:action.payload.user_id,
-                fname: action.payload.fname,
-                lname: action.payload.lname,
-                email: action.payload.email,
-                about: action.payload.about,
-                image: action.payload.image
-              },
-             loading: false, 
-             error: null
-        };
+      return {
+        ...state,
+        user: {
+          user_id: action.payload.user_id,
+          fname: action.payload.fname,
+          lname: action.payload.lname,
+          email: action.payload.email,
+          about: action.payload.about,
+          image: action.payload.image,
+        },
+        loading: false,
+        error: null,
+      };
     case SHOW_ALERT:
-      
       return {
         ...state,
         alert: {
           visible: true,
           message: action.payload.message,
-          color: action.payload.color
-        }
+          color: action.payload.color,
+        },
       };
-    
+
     case HIDE_ALERT:
       return {
         ...state,
         alert: {
           ...state.alert,
-          visible: false
-        }
+          visible: false,
+        },
       };
 
     case TRIGGER_ALERT:
@@ -117,12 +123,13 @@ const Auth = (state = INIT_STATE, action) => {
         alert: {
           visible: state.alert.visible,
           message: action.payload.message,
-          color: action.payload.color
-        }
+          color: action.payload.color,
+        },
       };
 
-    default: return { ...state };
-    }
-}
+    default:
+      return { ...state };
+  }
+};
 
 export default Auth;

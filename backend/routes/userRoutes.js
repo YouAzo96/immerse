@@ -49,7 +49,6 @@ router.post('/register', async (req, res) => {
     emitter.emit('userRegistered', { email: email });
 
     if (referrer) {
-      console.log('Referrer' + referrer);
       //If this registration was referred by someone
       const [res, fields] = await db
         .promise()
@@ -120,7 +119,6 @@ router.post('/invite', async (req, res) => {
     const refereeEmail = req.body.refereeEmail;
     if (!refereeEmail)
       return res.status(405).json({ error: 'Missing Param [referee email]' });
-    console.log('Invite API called', req.body);
     //check if user exist:
     const [referee, fields] = await db
       .promise()
@@ -167,7 +165,14 @@ router.post('/invite', async (req, res) => {
 router.get('/accept-contact/:sender/:receiver', async (req, res) => {
   const sender = req.params.sender;
   const receiver = req.params.receiver;
-
+  const [iscontact, fields] = await db.promise().query(
+    'SELECT * from userhascontact where \
+  (user_id = ? and contact_id = ?) or ((user_id = ? and contact_id = ?))',
+    [sender, receiver, receiver, sender]
+  );
+  if (iscontact[0]) {
+    return res.status(200).redirect('http://localhost:3000/');
+  }
   await db
     .promise()
     .query('INSERT into userhascontact values(?,?)', [sender, receiver]);
@@ -183,7 +188,7 @@ router.get('/accept-contact/:sender/:receiver', async (req, res) => {
     .query('Select fname,lname from user where user_id=?;', [receiver]);
   const [SenderDeviceToken, filds] = await db
     .promise()
-    .query('Select device_token from user where user_id=?;', [sender]);
+    .query('Select subscription from user where user_id=?;', [sender]);
 
   //get deviceToken info or whatever Firebase FCM will need:
   emitter.emit('contactAdded', {
@@ -192,12 +197,10 @@ router.get('/accept-contact/:sender/:receiver', async (req, res) => {
         title: 'New Contact Added',
         body: `${Receiver[0].fname} ${Receiver[0].lname} Accepted Your Invitation!`,
       },
-      token: SenderDeviceToken[0].device_token, 
+      subscription: SenderDeviceToken[0].subscription,
     },
   });
-  return res
-    .status(200)
-    .json({ message: 'Invitation Accepted, Contact Added!' });
+  return res.status(200).redirect('http://localhost:3000/');
 });
 
 router.get('/refuse-contact/:sender/:receiver', async (req, res) => {
@@ -367,11 +370,20 @@ router.get('/messages', async (req, res) => {
     if (!isValidUser) {
       return res.status(401).json({ error: 'Invalid or Expired Token' });
     }
-    const sql = `SELECT msg from messages where receiver_id = ?;`;
+    const sql = `SELECT sender_id,msg from messages where receiver_id = ?;`;
     const [results, flds] = await db
       .promise()
       .query(sql, [isValidUser.user_id]);
-    if (results[0]) return res.status(200).json(results[0]);
+    if (results) {
+      console.log('results: ', results);
+
+      await db
+        .promise()
+        .query('delete from messages where receiver_id = ?', [
+          isValidUser.user_id,
+        ]);
+      return res.status(200).json(results);
+    }
   } catch (error) {
     res.status(500).json({ error });
   }

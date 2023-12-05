@@ -42,6 +42,7 @@ import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 import { useTranslation } from 'react-i18next';
 
 import {
+  addConversation,
   getConversationByUserId,
   updateConversation,
 } from '../../../helpers/localStorage';
@@ -57,10 +58,9 @@ function UserChat(props) {
   const [chatMessages, setchatMessages] = useState(
     props.recentChatList[props.active_user].messages
   );
-
+  const [modal, setModal] = useState(false);
   const ref = useRef();
   const socketRef = useRef();
-  const [modal, setModal] = useState(false);
 
   /* intilize t variable for multi language implementation */
   const { t } = useTranslation();
@@ -70,7 +70,7 @@ function UserChat(props) {
 
     // Check if the socket instance already exists in the ref
     if (!socketRef.current && token) {
-      const newSocket = io(config.API_URL, {
+      const newSocket = io(config.BACKEND_URL, {
         query: {
           userId: token,
         },
@@ -80,7 +80,7 @@ function UserChat(props) {
 
     // Set up event listeners or any other socket-related logic
     if (socketRef.current) {
-      socketRef.current.on('chat message', (data) => {
+      socketRef.current.on('chat message', async (data) => {
         const { sender, message } = data;
         //check if we have an open conversation
         const copyallUsers = [...allUsers];
@@ -92,6 +92,17 @@ function UserChat(props) {
           copyallUsers[foundUserIndex].messages.push(message);
           copyallUsers[foundUserIndex].unRead += 1;
           console.log('new users list: ', copyallUsers);
+          //get conversation from indexDB
+          const user = await getConversationByUserId(
+            props.loggedUser.user_id,
+            sender
+          );
+
+          user.messages = [...user.messages, message];
+
+          await updateConversation(props.loggedUser.user_id, user);
+
+          //update state with modified user lists
           props.setFullUser(copyallUsers);
           scrolltoBottom();
         } else {
@@ -114,6 +125,11 @@ function UserChat(props) {
             copyallUsers.push(newUser);
             // props.addLoggedinUser(newUser);
             console.log('new users list: ', newUser);
+
+            const user = await addConversation(
+              props.loggedUser.user_id,
+              newUser
+            );
             props.setFullUser(copyallUsers);
           }
         }
@@ -124,7 +140,7 @@ function UserChat(props) {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [socketRef]);
 
   useEffect(() => {
     setchatMessages(props.recentChatList[props.active_user].messages);
@@ -529,14 +545,21 @@ function UserChat(props) {
                               )}
                             </div>
                             {chatMessages[key + 1] ? (
-                              chatMessages[key].userType === chatMessages[key + 1].userType ? null : (
+                              chatMessages[key].userType ===
+                              chatMessages[key + 1].userType ? null : (
                                 <div className="conversation-name">
-                                  {chat.userType === 'receiver' ? props.recentChatList[props.active_user].fname : user.fname}
+                                  {chat.userType === 'receiver'
+                                    ? props.recentChatList[props.active_user]
+                                        .fname
+                                    : user.fname}
                                 </div>
                               )
                             ) : (
                               <div className="conversation-name">
-                                {chat.userType === 'sender' ? user.fname : props.recentChatList[props.active_user].fname}
+                                {chat.userType === 'sender'
+                                  ? user.fname
+                                  : props.recentChatList[props.active_user]
+                                      .fname}
                               </div>
                             )}
                           </div>

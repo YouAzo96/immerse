@@ -105,29 +105,32 @@ io.on('connection', async (socket) => {
         const [currentMsgsInDb, flds] = await db
           .promise()
           .query(
-            'SELECT msg from messages where sender_id = ? and receiver_id=?;',
+            'SELECT msg from messages where sender_id = ? and receiver_id= ?;',
             [sender, receiver]
           );
         if (currentMsgsInDb[0]) {
-          /*{
-            {
-              id: 1,
-              message: 'hey',
-                time: '00:9',
-              userType: 'sender',
-              image: null,
-                isFileMessage: false,
-              isImageMessage: false
-    },
-  }*/
-          console.log('current msgs in db: ', currentMsgsInDb[0]);
+          //user already have msgs, add to them:
+          const prevMsgs = currentMsgsInDb[0]['msg'];
+
+          console.log('current msgs in db: ', currentMsgsInDb[0]['msg']);
+          prevMsgs.push(message);
+          console.log('new msg included: ', prevMsgs);
+          await db
+            .promise()
+            .query(
+              'UPDATE messages set msg = ? where (sender_id = ? and receiver_id = ?)',
+              [JSON.stringify(prevMsgs), sender, receiver]
+            );
         } else {
+          //doesnt have saved msgs, start a new JSON wrapper object.
+          const messages = [];
+          messages.push(message);
           await db
             .promise()
             .query('INSERT into messages values (?,?,?)', [
               sender,
               receiver,
-              JSON.stringify(message),
+              JSON.stringify(messages),
             ]);
         }
       } catch (error) {
@@ -140,6 +143,7 @@ io.on('connection', async (socket) => {
     if (user_id) {
       sockets.delete(user_id); //delete socket from store
     }
+    console.log('socket deleted for ', user_id);
   });
 });
 

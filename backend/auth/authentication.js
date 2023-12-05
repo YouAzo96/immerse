@@ -51,7 +51,6 @@ app.post('/auth', async (req, res) => {
       expiresIn: '10h',
     }
   );
-
   return res.status(200).json({ token: token }); //user authenticated and token generated
 });
 app.post('/verify', async (req, res) => {

@@ -160,12 +160,20 @@ self.addEventListener('push', (event) => {
   const payload = event.data.text();
   const notificationData = JSON.parse(payload);
   const message = notificationData.message;
+  const eventType = notificationData.eventType;
   const UserWhoJustLoggedIn = notificationData.user_id;
   const options = {
     icon: './assets/images/favicon.ico',
     body: message,
   };
-
+  if (eventType === 'contactAdded') {
+    //refresh the app to get the new contact
+    self.clients.matchAll({ type: 'window' }).then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({ type: 'REFRESH_APP' });
+      });
+    });
+  }
   event.waitUntil(self.registration.showNotification('Immerse', options));
 });
 
@@ -174,3 +182,65 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(clients.openWindow('http://localhost:3000/dashboard'));
 });
+
+// try {
+//   if ('serviceWorker' in navigator) {
+//     if (!navigator.serviceWorker.controller) {
+//       // Register the service worker if not already registered
+//       await navigator.serviceWorker.register('./serviceWorker.js', {
+//         scope: '/dashboard/',
+//       });
+//     }
+//     // Get the service worker registration
+//     const registration = await navigator.serviceWorker.ready;
+//     console.log(
+//       'Service Worker registered with scope:',
+//       registration.scope
+//     );
+//     registration.active.postMessage({
+//       type: 'subscribe',
+//       user: this.props.loggedUser,
+//     });
+
+//     const permission = await Notification.requestPermission();
+//     if (permission === 'granted') {
+//       const isSubscribed = await this.checkSubscription(registration);
+
+//       if (
+//         !isSubscribed &&
+//         this.props.loggedUser &&
+//         this.props.loggedUser.user_id
+//       ) {
+//         await this.subscribeUser(registration, this.props.loggedUser);
+//       }
+//     } else {
+//       console.log('Notification permission denied.');
+//     }
+//   }
+// } catch (error) {
+//   console.error('Error in SW registration or subscription:', error);
+// }
+
+async function checkSubscription(registration) {
+  const subscription = await registration.pushManager.getSubscription();
+  return Boolean(subscription);
+}
+async function subscribeUser(registration, user) {
+  try {
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey:
+        'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
+    });
+
+    await create(`${gatewayServiceUrl}/notify`, {
+      subscription: subscription,
+      user_id: user.user_id,
+      user_name: `${user.fname} ${user.lname}`,
+    });
+
+    console.log('Subscription sent!');
+  } catch (error) {
+    console.error('Error in subscribeUser:', error);
+  }
+}

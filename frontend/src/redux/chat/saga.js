@@ -9,6 +9,7 @@ import {
   FULL_USER,
   FETCH_USER_CONTACTS,
   INVITE_CONTACT,
+  FETCH_USER_MESSAGES,
 } from './constants';
 import { apiError, triggerAlert } from '../auth/actions';
 import {
@@ -16,6 +17,7 @@ import {
   addLoggedinUser,
   setUserContacts,
   inviteContactSuccess,
+  setUserMessages,
   updateUserList,
 } from './actions';
 import { setActiveTab } from '../layout/actions';
@@ -48,6 +50,20 @@ function* fetchUserContacts() {
     yield put(apiError(error));
   }
 }
+function* fetchUserMessages() {
+  try {
+    const token = localStorage.getItem('authUser').replace(/"/g, '');
+    const response = yield call(get, 'users/messages', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log('fetched messages: ', response);
+    yield put(setUserMessages(response));
+  } catch (error) {
+    yield put(apiError(error));
+  }
+}
 function* inviteContacts(action) {
   try {
     const token = localStorage.getItem('authUser').replace(/"/g, '');
@@ -67,8 +83,6 @@ function* inviteContacts(action) {
 function* handleChatUser(action) {
   try {
     const local = yield call(getConversations, loggedInUser.user_id);
-    // console.log('local', local);
-
     if (!local) {
       yield put(updateUserList());
     } else {
@@ -102,7 +116,7 @@ function* handleAddLoggedUser(action) {
       users.splice(0, 1);
     }
     const newUserId = users.findIndex((item) => item.id === user.id);
-    yield call(addConversation,loggedInUser.user_id, user);
+    yield call(addConversation, loggedInUser.user_id, user);
     yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
   } catch (error) {
@@ -117,7 +131,6 @@ function* handleCreateGroup(action) {
     console.error('Error in handleCreateGroup saga:', error);
   }
 }
-
 export function* watchChatUser() {
   yield takeEvery(CHAT_USER, handleChatUser);
 }
@@ -137,7 +150,9 @@ export function* watchFullUser() {
 export function* watchFetchUserContacts() {
   yield takeEvery(FETCH_USER_CONTACTS, fetchUserContacts);
 }
-
+export function* watchFetchUserMessages() {
+  yield takeEvery(FETCH_USER_MESSAGES, fetchUserMessages);
+}
 export function* watchInviteContact() {
   yield takeEvery(INVITE_CONTACT, inviteContacts);
 }
@@ -150,6 +165,7 @@ function* ChatSaga() {
     fork(watchFullUser),
     fork(watchInviteContact),
     fork(watchFetchUserContacts),
+    fork(watchFetchUserMessages),
   ]);
 }
 
