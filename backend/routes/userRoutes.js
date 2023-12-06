@@ -377,11 +377,11 @@ router.get('/messages', async (req, res) => {
     if (results) {
       console.log('results: ', results);
 
-      await db
-        .promise()
-        .query('delete from messages where receiver_id = ?', [
-          isValidUser.user_id,
-        ]);
+      // await db
+      //   .promise()
+      //   .query('delete from messages where receiver_id = ?', [
+      //     isValidUser.user_id,
+      //   ]);
       return res.status(200).json(results);
     }
   } catch (error) {

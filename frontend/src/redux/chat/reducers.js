@@ -16,8 +16,13 @@ import {
 
 //Import Images
 import blankuser from '../../assets/images/users/blankuser.jpeg';
-import { addUser } from '../../helpers/localStorage';
+import {
+  addUser,
+  getConversations,
+  updateConversation,
+} from '../../helpers/localStorage';
 import { all } from 'axios';
+import { getLoggedInUserInfo } from '../../helpers/authUtils';
 
 const INIT_STATE = {
   active_user: 0,
@@ -126,15 +131,18 @@ const Chat = (state = INIT_STATE, action) => {
         error: null,
       };
     case FETCH_USER_MESSAGES:
-      return { ...state, loading: true };
+      return { ...state, chatLoading: true };
 
     case FETCH_USER_MESSAGES_SUCCESS:
       //we get from the DB an array of json objects
       //Each JSON obj is contains: sender_id and msg fields
       //msg field is a list of messages from the corresponding sender
-      let allusers = state.users;
+      const current_user_id = getLoggedInUserInfo().user_id;
+      const allusers = action.payload.currentUsersList;
+      const receivedMessages = action.payload.messages;
+      console.log('allusers from indexDb: ', allusers);
+      console.log('reeivedmsgs: ', receivedMessages);
 
-      const receivedMessages = action.payload;
       receivedMessages.map((OneSenderMessages) => {
         for (const user of allusers) {
           if (OneSenderMessages.sender_id === user.id) {
@@ -171,10 +179,12 @@ const Chat = (state = INIT_STATE, action) => {
         });
       }
       console.log('allUsers after fetching messages: ', allusers);
+      allusers.map((usr) => {
+        updateConversation(current_user_id, usr);
+      });
       return {
         ...state,
-        users: allusers,
-        loading: false,
+        chatLoading: false,
       };
     case INVITE_CONTACT:
       return { ...state, loading: true };

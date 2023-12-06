@@ -50,16 +50,22 @@ function* fetchUserContacts() {
     yield put(apiError(error));
   }
 }
-function* fetchUserMessages() {
+function* fetchUserMessages(currentUsers) {
   try {
     const token = localStorage.getItem('authUser').replace(/"/g, '');
+    const currentUsersList = currentUsers.payload;
     const response = yield call(get, 'users/messages', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log('fetched messages: ', response);
-    yield put(setUserMessages(response));
+    console.log('messages from mysql', response);
+    const messages = response;
+    if (messages.length > 0) {
+      console.log(messages);
+      const payload = { currentUsersList, messages };
+      yield put(setUserMessages(payload)); //takes current users in indexDB and new messages from mysql
+    }
   } catch (error) {
     yield put(apiError(error));
   }

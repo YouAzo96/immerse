@@ -92,6 +92,12 @@ function* login({ payload: { email, password, history } }) {
  */
 function* logout({ payload: { history } }) {
   try {
+    navigator.serviceWorker.getRegistration().then((registration) => {
+      if (registration) {
+        console.log('SW unregistered!');
+        registration.unregister();
+      }
+    });
     yield put(logoutUserSuccess(true));
     localStorage.removeItem('authUser');
     window.location.reload();

@@ -5,6 +5,12 @@ import ChatLeftSidebar from './ChatLeftSidebar';
 import UserChat from './UserChat/index';
 import { connect } from 'react-redux';
 import { fetchUserProfile } from '../../redux/auth/actions';
+import { getLoggedInUserInfo } from '../../helpers/authUtils';
+import {
+  addUser,
+  getConversations,
+  updateConversation,
+} from '../../helpers/localStorage';
 import {
   fetchUserContacts,
   chatUser,
@@ -18,16 +24,60 @@ const gatewayServiceUrl = config.BACKEND_URL;
 const create = new APIClient().create;
 //send ONLINE status:
 class Index extends Component {
-  isSubscribed = false;
   hasFetchedMessages = false;
+
   async componentDidMount() {
+    // if (!this.hasFetchedMessages) {
+    //   const current_user_id = getLoggedInUserInfo().user_id;
+    //   const allusers = await getConversations(current_user_id);
+    //   this.props.fetchUserMessages(allusers);
+    //   this.hasFetchedMessages = true; // Mark messages as fetched
+    // }
     this.props.fetchUserProfile();
     this.props.fetchUserContacts();
     this.props.chatUser();
-    if (!this.hasFetchedMessages) {
-      this.props.fetchUserMessages();
-      this.hasFetchedMessages = true; // Mark messages as fetched
-    }
+
+    // //register s.worker:
+    // if (!this.serviceWorkerRegistered || !this.isSubscribed) {
+    //   const registration = await navigator.serviceWorker
+    //     .register('./serviceWorker.js', {
+    //       scope: '/dashboard/',
+    //     })
+    //     .then(async (registration) => {
+    //       if (registration) {
+    //         console.log('sw registered');
+    //         localStorage.getItem('serviceWorkerRegistered', true);
+
+    //         navigator.serviceWorker.addEventListener(
+    //           'activate',
+    //           async (event) => {
+    //             registration = event.target;
+    //             await registration.pushManager
+    //               .subscribe({
+    //                 userVisibleOnly: true,
+    //                 applicationServerKey:
+    //                   'BBqDXkxFpyZKr_bgvztajKcanbfXuo9vcqvSThBsaAqU_3jLMl4gwTp__V5WpQq-hRYTUpyGoTW9ubNi6owtgcY',
+    //               })
+    //               .then(async (subscription) => {
+    //                 console.log('subscribed: ', subscription);
+    //                 await create(`${gatewayServiceUrl}notify`, {
+    //                   subscription: this.subscription,
+    //                   user_id: this.props.loggedUser.user_id,
+    //                   user_name: `${this.props.loggedUser.fname} ${this.props.loggedUser.lname}`,
+    //                 });
+    //                 if (resp.success) {
+    //                   console.log('Subscription sent!');
+    //                   this.isSubscribed = true;
+    //                 }
+    //               });
+    //           }
+    //         );
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       console.log('error registering sw. ', err);
+    //     });
+    // }
   }
   render() {
     const { loading, loggedUser, userContacts, chatLoading } = this.props;

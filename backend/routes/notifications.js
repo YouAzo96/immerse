@@ -38,7 +38,7 @@ const vapidKeys = {
   privateKey: 'pMf3gYWIbuK8zYaKjWLD-l7I3HS7lanYsuDuXnKNk54',
 };
 webpush.setVapidDetails(
-  'mailto:your-email@example.com',
+  vapidKeys.subject,
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
@@ -100,8 +100,9 @@ app.post('/subscribe', async (req, res) => {
     const [contactsSubscriptions, flds] = await db
       .promise()
       .query(sql1, [user_id, user_id]);
+    console.log('contacts subscriptions: ', contactsSubscriptions);
     contactsSubscriptions.map((sub) => {
-      const notification = webpush
+      webpush
         .sendNotification(
           sub.subscription,
           JSON.stringify({
@@ -150,9 +151,11 @@ app.post('/notify', async (req, res) => {
             )
             .then(() => {
               console.log('User Notified!');
+              return res.status(200).json('User Notified!');
             })
             .catch((err) => {
               console.log('User Not Notified! ', err);
+              return res.status(400).json('User Not Notified! ', err);
             });
         }
         break;
@@ -176,13 +179,18 @@ app.post('/notify', async (req, res) => {
               )
               .then(() => {
                 console.log('Contact Notified!');
+                return res.status(200).json('Contact Notified!');
               })
               .catch((err) => {
                 console.log('Contact Not Notified! ', err);
+                return res.status(400).json('Contact Not Notified!', err);
               });
           }
         } catch (error) {
           console.log('Status Contact Notification Failed', error);
+          return res
+            .status(500)
+            .json('Status Contact Notification Failed', error);
         }
 
         break;
@@ -335,7 +343,6 @@ app.post('/notify', async (req, res) => {
           }
         });
         break;
-
       default:
         break;
     }

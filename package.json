@@ -2,11 +2,14 @@
   "name": "immerse",
   "private": true,
   "scripts": {
-    "start": "npm-run-all --parallel start:Immerse start:backend",
-    "start:frontend": "cd Immerse && npm start",
-    "start:backend": "cd backend && npm start"
+    "start": "npm-run-all --parallel start:frontend start:backend start:auth start:notif",
+    "start:frontend": "cd frontend && yarn start",
+    "start:backend": "cd backend && nodemon server.js",
+    "start:auth": "cd backend/auth && nodemon authentication.js",
+    "start:notif": "cd backend/routes && nodemon notifications.js"
   },
-  "dependencies": {
-    "shared-library": "^1.0.0"
+  "dependencies": {},
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
   }
 }

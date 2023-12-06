@@ -37,14 +37,14 @@ export const createGroup = (groupData) => ({
   payload: groupData,
 });
 
-export const fetchUserMessages = () => ({
+export const fetchUserMessages = (currentUsers) => ({
   type: FETCH_USER_MESSAGES,
-  payload: {},
+  payload: currentUsers,
 });
 
-export const setUserMessages = (messages) => ({
+export const setUserMessages = (newpayload) => ({
   type: FETCH_USER_MESSAGES_SUCCESS,
-  payload: messages,
+  payload: newpayload,
 });
 
 export const fetchUserContacts = () => ({

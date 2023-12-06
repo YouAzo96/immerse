@@ -39,11 +39,9 @@ const db = mysql.createPool({
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
-const conversationRoutes = require('./routes/conversationRoutes');
 
 // Use the routes
 app.use('/api/users', userRoutes);
-app.use('/api/conversations', conversationRoutes);
 
 app.use(errorHandler);
 
@@ -54,7 +52,7 @@ app.post('/notify', async (req, res) => {
     body: req.body,
     json: true,
   };
-
+  console.log('subs received: ', req.body.subscription);
   await request(requestOptions)
     .then((response) => {
       if (response.success) {
@@ -92,9 +90,10 @@ io.on('connection', async (socket) => {
   socket.on('chat message', async (data) => {
     const { sender, receiver, message } = data; //stringify msg it at front end
     const contact_socket = sockets.get(receiver);
+    message.userType = 'receiver';
     if (contact_socket) {
       //contact has an open socket, emit msg to them:
-      message.userType = 'receiver';
+
       contact_socket.emit('chat message', {
         sender: sender,
         message: message,
