@@ -32,22 +32,19 @@ import {
   openUserSidebar,
   setFullUser,
   addLoggedinUser,
+  setActiveUser,
+  setUserMessages,
 } from '../../../redux/actions';
 
-//Import Images
-import avatar4 from '../../../assets/images/users/avatar-4.jpg';
-import avatar1 from '../../../assets/images/users/avatar-1.jpg';
 
 //i18n
 import { useTranslation } from 'react-i18next';
 
-import {
-  addConversation,
-  getConversationByUserId,
-  updateConversation,
-} from '../../../helpers/localStorage';
+import {addOrUpdateConversation, getConversationByUserId,} from '../../../helpers/localStorage';
 import { getLoggedInUser } from '../../../helpers/authUtils';
 import config from '../../../config';
+import { bindActionCreators } from 'redux';
+import { all } from 'axios';
 
 function UserChat(props) {
   const user = props.loggedUser;
@@ -55,8 +52,13 @@ function UserChat(props) {
   const contacts = props.userContacts;
   //userType must be required
   const [allUsers] = useState(props.recentChatList);
+
+  if (!props.recentChatList) {
+    return <div></div>;
+  }
+
   const [chatMessages, setchatMessages] = useState(
-    props.recentChatList[props.active_user].messages
+    props.recentChatList[props.active_user] ? props.recentChatList[props.active_user].messages : []
   );
   const [modal, setModal] = useState(false);
   const ref = useRef();
@@ -82,37 +84,29 @@ function UserChat(props) {
     if (socketRef.current) {
       socketRef.current.on('chat message', async (data) => {
         const { sender, message } = data;
-        //check if we have an open conversation
         const copyallUsers = [...allUsers];
-        const foundUserIndex = Object.keys(allUsers).find(
-          (key) => allUsers[key].id === sender
-        );
-        //if the sender have an open chat with us
-        if (foundUserIndex) {
-          copyallUsers[foundUserIndex].messages.push(message);
-          copyallUsers[foundUserIndex].unRead += 1;
-          console.log('new users list: ', copyallUsers);
-          //get conversation from indexDB
-          const user = await getConversationByUserId(
-            props.loggedUser.user_id,
-            sender
+        const foundUserIndex = copyallUsers.findIndex(user => user.id === sender);
+
+        if (foundUserIndex !== -1) {
+          const messageExists = copyallUsers[foundUserIndex].messages.find(
+            existingMessage => existingMessage.id === message.id
           );
+          if (!messageExists) {
+            copyallUsers[foundUserIndex].messages.push(message);
+            copyallUsers[foundUserIndex].unRead += 1;
 
-          user.messages = [...user.messages, message];
+            const user = await getConversationByUserId(props.loggedUser.user_id, sender);
+            user.messages = [...user.messages, message];
 
-          await updateConversation(props.loggedUser.user_id, user);
-
-          //update state with modified user lists
-          props.setFullUser(copyallUsers);
-          scrolltoBottom();
+            setchatMessages(prevChatMessages => [...prevChatMessages, message]);
+            props.setFullUser(copyallUsers, props.loggedUser.user_id, user);
+            scrolltoBottom();
+          }
         } else {
-          //else
-          const contact = contacts.find(
-            (cntct) => (cntct.children.user_id = sender)
-          );
+          const contact = contacts.find(cntct => cntct.children.user_id === sender);
           if (contact) {
             const newUser = {
-              id: copyallUsers.length + 1,
+              id: contact.children.user_id,
               name: contact.children.name,
               profilePicture: contact.children.image || blankuser || null,
               status: contact.children.last_seen,
@@ -123,14 +117,8 @@ function UserChat(props) {
             };
 
             copyallUsers.push(newUser);
-            // props.addLoggedinUser(newUser);
-            console.log('new users list: ', newUser);
-
-            const user = await addConversation(
-              props.loggedUser.user_id,
-              newUser
-            );
-            props.setFullUser(copyallUsers);
+            props.setFullUser(copyallUsers, props.loggedUser.user_id, newUser);
+            setchatMessages(prevChatMessages => [...prevChatMessages, message]);
           }
         }
       });
@@ -143,7 +131,12 @@ function UserChat(props) {
   }, [socketRef]);
 
   useEffect(() => {
-    setchatMessages(props.recentChatList[props.active_user].messages);
+    const activeChat = props.recentChatList[props.active_user];
+
+    if (activeChat && activeChat.messages) {
+      setchatMessages(activeChat.messages);
+    }
+
     if (ref.current) {
       ref.current.recalculate();
       if (ref.current.el) {
@@ -183,7 +176,7 @@ function UserChat(props) {
           size: message.size,
           time: n,
           userType: 'sender',
-          image: avatar4,
+          image: null,
           isFileMessage: true,
           isImageMessage: false,
         };
@@ -199,7 +192,7 @@ function UserChat(props) {
           size: message.size,
           time: n,
           userType: 'sender',
-          image: avatar4,
+          image: null,
           isImageMessage: true,
           isFileMessage: false,
         };
@@ -219,21 +212,29 @@ function UserChat(props) {
 
     user.messages = [...user.messages, messageObj];
 
-    await updateConversation(props.loggedUser.user_id, user);
+    let filteredUsers = allUsers.filter(user => user.id !== -1);
+    let copyallUsers = filteredUsers.length > 0 ? [...filteredUsers] : [...allUsers];
 
-    let copyallUsers = [...allUsers];
-    copyallUsers[props.active_user].messages = [...chatMessages, messageObj];
-    copyallUsers[props.active_user].isTyping = false;
+    // Check if the user exists in copyallUsers
+    let userIndex = copyallUsers.findIndex(u => u.id === user.id);
+    if (userIndex === -1) {
+      // If the user doesn't exist, add it to copyallUsers
+      copyallUsers.push(user);
+      userIndex = copyallUsers.length - 1;
+    }
+
+    copyallUsers[userIndex].messages = [...chatMessages, messageObj];
+    copyallUsers[userIndex].isTyping = false;
     //send to user :
     if (socketRef.current) {
       console.log('Here: ', copyallUsers[props.active_user].id);
       socketRef.current.emit('chat message', {
         sender: props.loggedUser.user_id,
-        receiver: copyallUsers[props.active_user].id,
+        receiver: user.id,
         message: messageObj,
       });
     }
-    props.setFullUser(copyallUsers);
+    props.setFullUser(copyallUsers, props.loggedUser.user_id, user);
 
     scrolltoBottom();
   };
@@ -255,11 +256,11 @@ function UserChat(props) {
       return item.id !== id;
     });
     user.messages = filtered;
-    await updateConversation(props.loggedUser.user_id, user);
+    await addOrUpdateConversation(props.loggedUser.user_id, user);
     setchatMessages(filtered);
   };
 
-  if (props.recentChatList[props.active_user].name === null) {
+  if (!allUsers || allUsers[0].id === -1) {
     return (
       <div
         style={{
@@ -293,7 +294,8 @@ function UserChat(props) {
                 ref={ref}
                 className="chat-conversation p-5 p-lg-4"
                 id="messages"
-              >
+              > 
+
                 <ul className="list-unstyled mb-0">
                   {chatMessages.map((chat, key) =>
                     chat.isToday && chat.isToday === true ? (
@@ -603,6 +605,13 @@ const mapStateToProps = (state) => {
   return { active_user, userSidebar };
 };
 
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators(
+    { openUserSidebar, setFullUser, addLoggedinUser, setActiveUser },
+    dispatch
+  );
+};
+
 export default withRouter(
-  connect(mapStateToProps, { openUserSidebar, setFullUser })(UserChat)
+  connect(mapStateToProps, mapDispatchToProps)(UserChat)
 );

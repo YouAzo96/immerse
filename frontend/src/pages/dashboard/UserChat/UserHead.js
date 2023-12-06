@@ -9,6 +9,10 @@ import { openUserSidebar, setFullUser } from "../../../redux/actions";
 import user from '../../../assets/images/users/avatar-4.jpg'
 
 function UserHead(props) {
+
+    if (!props.users[props.active_user]){
+        return <div></div>
+    } else {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [dropdownOpen1, setDropdownOpen1] = useState(false);
     const [Callmodal, setCallModal] = useState(false);
@@ -221,7 +225,7 @@ function UserHead(props) {
         </React.Fragment>
     );
 }
-
+}
 
 const mapStateToProps = (state) => {
     const { users, active_user } = state.Chat;

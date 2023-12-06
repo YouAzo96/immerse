@@ -16,6 +16,12 @@ import { activeUser, closeUserSidebar } from '../redux/actions';
 import { useTranslation } from 'react-i18next';
 
 function UserProfileSidebar(props) {
+
+
+  if (!props.users[props.active_user]) {
+    return <div></div>;
+  }
+
   const [isOpen1, setIsOpen1] = useState(true);
   const [isOpen2, setIsOpen2] = useState(false);
   const [isOpen3, setIsOpen3] = useState(false);

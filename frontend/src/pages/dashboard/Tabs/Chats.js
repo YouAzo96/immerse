@@ -9,7 +9,6 @@ import SimpleBar from 'simplebar-react';
 //actions
 import {
   setconversationNameInOpenChat,
-  activeUser,
 } from '../../../redux/actions';
 
 //components
@@ -22,6 +21,7 @@ class Chats extends Component {
       searchChat: '',
       recentChatList: this.props.recentChatList,
       contactList: this.props.contactList,
+      activeUser: this.props.active_user,
     };
     this.openUserChat = this.openUserChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -78,10 +78,10 @@ class Chats extends Component {
     //find index of current chat in array
     var index = this.props.recentChatList.indexOf(chat);
     // set activeUser
-    this.props.activeUser(index);
+    this.setState({ activeUser: index });
 
     var chatList = document.getElementById('chat-list');
-    var clickedItem = e.target;
+    var clickedItem = e.target.closest('li');
     var currentli = null;
 
     if (chatList) {
@@ -94,7 +94,7 @@ class Chats extends Component {
       }
       //find clicked conversation user
       for (var k = 0; k < li.length; ++k) {
-        if (li[k].contains(clickedItem)) {
+        if (li[k] === clickedItem) {
           currentli = li[k];
           break;
         }
@@ -107,7 +107,8 @@ class Chats extends Component {
     }
 
     var userChat = document.getElementsByClassName('user-chat');
-    if (userChat) {
+    console.log('userChat', userChat);
+    if (userChat.length > 0) {
       userChat[0].classList.add('user-chat-show');
     }
 
@@ -117,8 +118,9 @@ class Chats extends Component {
       unread.style.display = 'none';
     }
   }
-
   render() {
+    const { recentChatList } = this.state;
+    
     return (
       <React.Fragment>
         <div>
@@ -150,8 +152,9 @@ class Chats extends Component {
             recentChatList={this.props.recentChatList}
           />
 
-          {/* Start chat-message-list  */}
+          {recentChatList.length > 0 && (
           <div>
+          {/* Start chat-message-list  */}
             <h5 className="mb-3 px-3 font-size-16">Recent</h5>
             <SimpleBar className="chat-message-list">
               <ul
@@ -280,6 +283,7 @@ class Chats extends Component {
               </ul>
             </SimpleBar>
           </div>
+          )}
           {/* End chat-message-list */}
         </div>
       </React.Fragment>
@@ -294,5 +298,4 @@ const mapStateToProps = (state) => {
 
 export default connect(mapStateToProps, {
   setconversationNameInOpenChat,
-  activeUser,
 })(Chats);

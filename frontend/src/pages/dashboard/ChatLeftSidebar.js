@@ -31,6 +31,7 @@ function ChatLeftSidebar(props) {
             <Chats
               contacts={userContacts}
               recentChatList={props.recentChatList}
+              active_user={props.active_user}
             />
           </TabPane>
           {/* End chats tab-pane */}

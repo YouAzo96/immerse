@@ -23,9 +23,8 @@ class Index extends Component {
   async componentDidMount() {
     this.props.fetchUserProfile();
     this.props.fetchUserContacts();
-    this.props.chatUser();
     if (!this.hasFetchedMessages) {
-      this.props.fetchUserMessages();
+      this.props.fetchUserMessages(this.props.users);
       this.hasFetchedMessages = true; // Mark messages as fetched
     }
   }
@@ -56,6 +55,7 @@ class Index extends Component {
           loggedUser={this.props.loggedUser}
           userContacts={this.props.userContacts}
           recentChatList={this.props.users}
+          active_user={this.props.active_user}
         />
 
         {/* user chat */}
@@ -85,7 +85,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators(
-    { fetchUserProfile, fetchUserContacts, fetchUserMessages, chatUser },
+    { fetchUserProfile, fetchUserContacts, fetchUserMessages },
     dispatch
   );
 };

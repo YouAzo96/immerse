@@ -7,11 +7,12 @@ db.version(1).stores({
 
 export async function getConversations(loggedInId) {
   try {
-    // console.log('loggedInId', loggedInId);
+    console.log('loggedInId', loggedInId);
     const conversation = await db.conversations.get(loggedInId);
     if (!conversation) {
       return null;
     }
+    console.log('conversation', conversation);
     return conversation.users;
   } catch (error) {
     if (error.name === 'DataError') {
@@ -55,55 +56,52 @@ export async function getConversationByUserId(loggedInId, userId) {
     );
   }
 }
-
-export async function addConversation(loggedInId, user) {
+export async function addOrUpdateConversation(loggedInId, user) {
+  console.log('addOrUpdateConversation', loggedInId, user);
   try {
-    const conversation = await db.conversations.get(loggedInId);
+    let conversation = await db.conversations.get(loggedInId);
     if (conversation) {
-      // Check if user is already in the array
-      const existingUser = conversation.users.find(
+      const existingUserIndex = conversation.users.findIndex(
         (existingUser) => existingUser.id === user.id
       );
-      if (existingUser) {
-        // If user is already in the array, return the existing user
-        return existingUser;
+      if (existingUserIndex !== -1) {
+        // If user is already in the array, update the user's messages
+        if (user.messages) {
+          user.messages.forEach(newMessage => {
+            const messageExists = conversation.users[existingUserIndex].messages.find(
+              existingMessage => existingMessage.id === newMessage.id
+            );
+            if (!messageExists) {
+              conversation.users[existingUserIndex].messages.push(newMessage);
+            }
+          });
+        }
       } else {
-        // If not, add it
-        conversation.users.push(user);
-        await db.conversations.put(conversation);
+        // If not, add the user
+        const newUser = { ...user, messages: [] };
+        if (user.messages) {
+          user.messages.forEach(newMessage => {
+            const messageExists = conversation.users.find(
+              existingUser => existingUser.messages.find(
+                existingMessage => existingMessage.id === newMessage.id
+              )
+            );
+            if (!messageExists) {
+              newUser.messages.push(newMessage);
+            }
+          });
+        }
+        conversation.users.push(newUser);
       }
     } else {
-      await db.conversations.put({ loggedInId, users: [user] });
-    }
-    window.location.reload();
-  } catch (error) {
-    console.error('Error adding conversation:', error);
-  }
-}
-
-export async function updateConversation(loggedInId, user) {
-  try {
-    const conversation = await db.conversations.get(loggedInId);
-    const existingUserIndex = conversation.users.findIndex(
-      (existingUser) => existingUser.id === user.id
-    );
-
-    if (existingUserIndex !== -1) {
-      // If user is already in the array, update the message
-      conversation.users[existingUserIndex].messages = user.messages;
-    } else {
-      // If not, add the user
-      conversation.users.push(user);
+      // If conversation does not exist, create a new one
+      conversation = { loggedInId, users: [user] };
     }
     await db.conversations.put(conversation);
   } catch (error) {
-    console.error(
-      `Error updating conversation for user with id ${loggedInId}:`,
-      error
-    );
+    console.error('Error adding or updating conversation:', error);
   }
 }
-
 export async function deleteConversation(loggedInId) {
   try {
     await db.conversations.delete(loggedInId);

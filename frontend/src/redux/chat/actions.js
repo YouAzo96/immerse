@@ -22,9 +22,16 @@ export const activeUser = (userId) => ({
   payload: userId,
 });
 
-export const setFullUser = (fullUser) => ({
+export const setActiveUser = (userId) => {
+  return {
+    type: 'SET_ACTIVE_USER',
+    payload: userId,
+  };
+};
+
+export const setFullUser = (fullUser, loggedInId, user) => ({
   type: FULL_USER,
-  payload: fullUser,
+  payload: {fullUser, loggedInId, user, messages: user.messages},
 });
 
 export const addLoggedinUser = (userData) => ({
@@ -37,9 +44,9 @@ export const createGroup = (groupData) => ({
   payload: groupData,
 });
 
-export const fetchUserMessages = () => ({
+export const fetchUserMessages = (users) => ({
   type: FETCH_USER_MESSAGES,
-  payload: {},
+  payload: users,
 });
 
 export const setUserMessages = (messages) => ({

@@ -1,4 +1,4 @@
-import { fork, all, put, select, call, takeEvery } from 'redux-saga/effects';
+import { fork, all, put, take, select, call, takeEvery } from 'redux-saga/effects';
 import defaultImage from '../../assets/images/users/blankuser.jpeg';
 
 import {
@@ -10,6 +10,7 @@ import {
   FETCH_USER_CONTACTS,
   INVITE_CONTACT,
   FETCH_USER_MESSAGES,
+  FETCH_USER_CONTACTS_SUCCESS,
 } from './constants';
 import { apiError, triggerAlert } from '../auth/actions';
 import {
@@ -24,8 +25,9 @@ import { setActiveTab } from '../layout/actions';
 // Import any necessary API functions or services here
 import { APIClient } from '../../apis/apiClient';
 import axios from 'axios';
-import { addConversation, getConversations } from '../../helpers/localStorage';
+import { addOrUpdateConversation, getConversations } from '../../helpers/localStorage';
 import { getLoggedInUserInfo } from '../../helpers/authUtils';
+import { FETCH_USER_PROFILE_SUCCESS } from '../auth/constants';
 const create = new APIClient().create;
 const get = new APIClient().get;
 const loggedInUser = getLoggedInUserInfo();
@@ -50,16 +52,53 @@ function* fetchUserContacts() {
     yield put(apiError(error));
   }
 }
+
 function* fetchUserMessages() {
   try {
     const token = localStorage.getItem('authUser').replace(/"/g, '');
-    const response = yield call(get, 'users/messages', {
+    // Fetch messages from the API
+    const apiResponse = yield call(get, 'users/messages', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log('fetched messages: ', response);
-    yield put(setUserMessages(response));
+
+    // Fetch messages from the local database
+    const localResponse = yield call(getConversations, loggedInUser.user_id);
+
+    // Convert the API response into the user messages format
+    const allusers = apiResponse.map((message) => {
+      return {
+        id: message.sender_id,
+        name: message.sender_name,
+        profilePicture: message.sender_image || blankuser || null,
+        status: message.sender_last_seen,
+        unRead: 1,
+        roomType: 'contact',
+        isGroup: false,
+        messages: [message],
+      };
+    });
+
+    // Merge the two lists of messages
+    let allMessages = [...allusers];
+    if (localResponse) {
+      allMessages = [...allMessages, ...localResponse];
+    }
+
+    // Remove duplicates
+    const messageMap = new Map();
+    allMessages.forEach(user => {
+      user.messages = Array.from(new Set(user.messages));
+    });
+
+    // Sort the messages
+    allMessages.forEach(user => {
+      user.messages.sort((a, b) => a.timestamp - b.timestamp);
+    });
+
+    console.log('fetched messages: ', allMessages);
+    yield put(setUserMessages(allMessages));
   } catch (error) {
     yield put(apiError(error));
   }
@@ -97,7 +136,11 @@ function* handleChatUser(action) {
 
 function* handleFullUser(action) {
   try {
-    // Add logic for handling FULL_USER action here if needed
+    const { fullUser, loggedInId, user } = action.payload;
+    console.log('Full User: ', fullUser);
+    console.log('Logged In Id: ', loggedInId);
+    console.log('User: ', user);
+    yield call(addOrUpdateConversation, loggedInId, user);
   } catch (error) {
     console.error('Error in handleChatUser saga:', error);
   }
@@ -110,15 +153,11 @@ function* handleAddLoggedUser(action) {
     //id=1,
     const users = yield select((state) => state.Chat.users);
     console.log('Users: ', users);
-    if (users[0].name === null) {
-      console.log('Removing default user');
-      //remove the default user
-      users.splice(0, 1);
-    }
     const newUserId = users.findIndex((item) => item.id === user.id);
-    yield call(addConversation, loggedInUser.user_id, user);
+    yield call(addOrUpdateConversation, loggedInUser.user_id, user);
     yield put(activeUser(newUserId)); //just open their conversation
     yield put(setActiveTab('chat')); //move to chats tab
+    window.location.reload();
   } catch (error) {
     console.error('Error in handleAddLoggedUser saga:', error);
   }

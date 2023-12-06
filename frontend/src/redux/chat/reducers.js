@@ -23,7 +23,7 @@ const INIT_STATE = {
   active_user: 0,
   users: [
     {
-      id: 0,
+      id: -1,
       name: null,
       profilePicture: blankuser || null,
       status: 'offline',
@@ -79,10 +79,30 @@ const Chat = (state = INIT_STATE, action) => {
         active_user: action.payload,
       };
 
-    case FULL_USER:
+    case 'SET_ACTIVE_USER':
       return {
         ...state,
-        users: action.payload,
+        active_user: action.payload,
+      };
+
+    case FULL_USER:
+      console.log('fullUser', action.payload);
+      const mergedUsers = action.payload.fullUser.reduce((merged, user) => {
+        const existingUser = merged.find(existing => existing.id === user.id);
+        if (existingUser) {
+          user.messages.forEach(newMessage => {
+            if (!existingUser.messages.find(existingMessage => existingMessage.id === newMessage.id)) {
+              existingUser.messages.push(newMessage);
+            }
+          });
+          return merged;
+        } else {
+          return [...merged, user];
+        }
+      }, []);
+      return {
+        ...state,
+        users: mergedUsers,
       };
 
     case ADD_LOGGED_USER:
@@ -93,9 +113,13 @@ const Chat = (state = INIT_STATE, action) => {
       if (isUserExistInConversations !== -1) {
         return { ...state };
       }
+      let filteredUsers = [...state.users, action.payload];
+      if (state.users[0] && state.users[0].id === -1) {
+        filteredUsers = filteredUsers.slice(1);
+      }
       return {
         ...state,
-        users: [...state.users, action.payload],
+        users: filteredUsers,
       };
 
     case CREATE_GROUP:
@@ -126,56 +150,38 @@ const Chat = (state = INIT_STATE, action) => {
         error: null,
       };
     case FETCH_USER_MESSAGES:
-      return { ...state, loading: true };
+      return { ...state, loading: true, chatLoading: true };
 
     case FETCH_USER_MESSAGES_SUCCESS:
-      //we get from the DB an array of json objects
-      //Each JSON obj is contains: sender_id and msg fields
-      //msg field is a list of messages from the corresponding sender
-      let allusers = state.users;
+      let newUsers = action.payload;
 
-      const receivedMessages = action.payload;
-      receivedMessages.map((OneSenderMessages) => {
-        for (const user of allusers) {
-          if (OneSenderMessages.sender_id === user.id) {
-            user.messages.push(...OneSenderMessages.msg);
-          }
-        }
-        //delete the messages from the received object
-        const index = receivedMessages.indexOf(OneSenderMessages);
-        if (index !== -1) {
-          receivedMessages.splice(index, 1);
+      // If newUsers is undefined or empty, return the current state
+      if (!newUsers || newUsers.length === 0) {
+        return { ...state, loading: false, chatLoading: false };
+      }
+
+      let users = state.users;
+      let filUsers = users.filter((user) => user.id !== -1);
+
+      // Merge newUsers into filUsers
+      filUsers = [...filUsers, ...newUsers];
+
+      const updatedUsers = filUsers.map(user => {
+        const newUser = newUsers.find(newUser => newUser.id === user.id);
+        if (newUser) {
+          // If the user is already in the array, update the user's messages
+          return {
+            ...user,
+            messages: [...user.messages, ...newUser.messages]
+          };
+        } else {
+          // If not, return the user as is
+          return user;
         }
       });
-      //If any messages are left in receivedMessages obj,
-      // it means we dont have open conv. with them:
-      if (receivedMessages.length >= 1) {
-        receivedMessages.map((OneSenderMessages) => {
-          const contact = state.contacts.find(
-            (cntct) => (cntct.children.user_id = OneSenderMessages.sender_id)
-          );
-          if (contact) {
-            const newUser = {
-              id: allusers.length + 1,
-              name: contact.children.name,
-              profilePicture: contact.children.image || blankuser || null,
-              status: contact.children.last_seen,
-              unRead: OneSenderMessages.msg.length,
-              roomType: 'contact',
-              isGroup: false,
-              messages: [...OneSenderMessages.msg],
-            };
 
-            allusers.push(newUser);
-          }
-        });
-      }
-      console.log('allUsers after fetching messages: ', allusers);
-      return {
-        ...state,
-        users: allusers,
-        loading: false,
-      };
+      return { ...state, loading: false, chatLoading: false, error: null, users: updatedUsers }; 
+
     case INVITE_CONTACT:
       return { ...state, loading: true };
 
