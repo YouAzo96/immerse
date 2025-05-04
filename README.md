@@ -1,8 +1,5 @@
 # immerse
 
-## Overview
-
-Currently Immerse has not been containerized and deployed unfortunately. However we have made the local running easy. Currently our main branch is jan_dev, not main
 
 ## Prerequistes
 Please make sure you have the following installed:
